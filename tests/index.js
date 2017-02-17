@@ -1,6 +1,6 @@
 var HashBounds = require('../index.js');
 
-var hash = new HashBounds(10,3,100)
+var hash = new HashBounds(7,3,100)
 
 var obj = {
  bounds: {
