@@ -18,87 +18,93 @@
 */
 
 var Grid = require('./Grid.js')
-/*
-Map.prototype.every = function (c) {
-    var a = this.entries()
-    var b;
-    while (b = a.next().value) {
-        if (!c(b[1], b[0])) return true;
+    /*
+    Map.prototype.every = function (c) {
+        var a = this.entries()
+        var b;
+        while (b = a.next().value) {
+            if (!c(b[1], b[0])) return true;
+        }
+      return false;
     }
-  return false;
-}
-Map.prototype.toArray = function () {
-    var array = [];
-    this.forEach(function (a) {
-        array.push(a)
-    })
-    return array
-}
-Map.prototype.map = function(c) {
-  var f = new Map();
- var a = this.entries()
-    var b;
-    while (b = a.next().value) {
-        f.set(b[0],c(b[1], b[0])) 
+    Map.prototype.toArray = function () {
+        var array = [];
+        this.forEach(function (a) {
+            array.push(a)
+        })
+        return array
     }
-  return f;
-  
-}
-Map.prototype.filter = function(c) {
-  var f = new Map();
- var a = this.entries()
-    var b;
-    while (b = a.next().value) {
-        if (c(b[1], b[0])) f.set(b[0],b[1])
+    Map.prototype.map = function(c) {
+      var f = new Map();
+     var a = this.entries()
+        var b;
+        while (b = a.next().value) {
+            f.set(b[0],c(b[1], b[0])) 
+        }
+      return f;
+      
     }
-  return f;
-  
-}
-*/
+    Map.prototype.filter = function(c) {
+      var f = new Map();
+     var a = this.entries()
+        var b;
+        while (b = a.next().value) {
+            if (c(b[1], b[0])) f.set(b[0],b[1])
+        }
+      return f;
+      
+    }
+    */
 module.exports = class HashBounds {
     constructor(power, lvl, max) {
         this.INITIAL = power;
         this.LVL = lvl;
         this.MAX = max;
-        this.MIN = power - lvl;
+        this.MIN = power - 1;
         this.LEVELS = []
         this.lastid = 0;
         this.createLevels()
-
+        this.SQRT = [];
+        this.setupSQRT()
+    }
+    setupSQRT() {
+        for (var i = 0; i < 255; ++i) {
+            this.SQRT.push(Math.floor(Math.sqrt(i)))
+        }
     }
     createLevels() {
         this.LEVELS = [];
         var a = this.INITIAL;
-        for (var i = 0; i < this.LVL; i++,a++) {
-            
-            this.LEVELS.push(new Grid(a,i,this.MAX >> a))
+        for (var i = 0; i < this.LVL; i++, a++) {
+
+            this.LEVELS.push(new Grid(a, i, this.MAX >> a))
         }
     }
-       clear() {
-        this.createLevels();      
-       }
-       update(node) {
+    clear() {
+        this.createLevels();
+    }
+    update(node) {
         this.delete(node)
-              this.insert(node)
-       }
+        this.insert(node)
+    }
     insert(node) {
         if (node.hash) throw "ERR: A node cannot be already in a hash!"
         var bounds = node.bounds;
         node.hash = {}
-          if (!node._HashID) node._HashID = ++this.lastid;
-       if (node._HashSize == node.bounds.width + node.bounds.height) {
-                   this.LEVELS[node._HashIndex].insert(node);
-              return;
-       }
-        var len = this.LEVELS.length
-       var index = len - ((node.bounds.width + node.bounds.height) >> (this.MIN - 2))
-       if (index < 0) index = 0;
-       
-       node._HashIndex = index;
-           node._HashSize = node.bounds.width + node.bounds.height;
-       this.LEVELS[index].insert(node);
+        if (!node._HashID) node._HashID = ++this.lastid;
+        if (node._HashSize == node.bounds.width + node.bounds.height) {
+            this.LEVELS[node._HashIndex].insert(node);
+            return;
+        }
+
+        var index = this.SQRT[(node.bounds.width + node.bounds.height) >> this.MIN]
+        if (index > this.LVL) index = this.LVL;
+
+        node._HashIndex = index;
+        node._HashSize = node.bounds.width + node.bounds.height;
+        this.LEVELS[index].insert(node);
         //for (var i = 0; i < len; ++i) {
-         //   if (this.LEVELS[len - i - 1].insert(node)) break;
+        //   if (this.LEVELS[len - i - 1].insert(node)) break;
         //}
     }
 
@@ -119,7 +125,7 @@ module.exports = class HashBounds {
         for (var i = 0; i < this.LEVELS.length; i++) {
             if (!this.LEVELS[i].every(bounds, call)) return false;
         }
-           return true;
+        return true;
     }
     forEach(bounds, call) {
         for (var i = 0; i < this.LEVELS.length; i++) {
