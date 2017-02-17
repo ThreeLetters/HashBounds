@@ -17,11 +17,23 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 module.exports = class Grid {
-    constructor(g, p) {
+    constructor(g, p,size) {
         this.POWER = g;
         this.LEVEL = p;
+        this.SIZE = size;
         this.DATA = {};
         this.LENGTH = 0;
+        this.init()
+    }
+    init() {
+     for (var i = 0; i< this.size; ++i) {
+        for (var j = 0; j< this.size; ++j) {
+           var key = j + ":" + i;
+           this.DATA[key] = new Map()    
+               
+     }   
+     }
+           
     }
     _every(m, c) {
         var a = m.entries()
@@ -56,7 +68,6 @@ module.exports = class Grid {
         for (var i = k1.y; i < k2.y + 1; i++) {
             for (var j = k1.x; j < k2.x + 1; j++) {
                 var ke = j + ":" + i;
-                if (!this.DATA[ke]) this.DATA[ke] = new Map()
                 this.DATA[ke].set(node._HashID, node)
             }
 
