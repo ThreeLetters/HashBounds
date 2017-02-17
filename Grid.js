@@ -26,6 +26,9 @@ module.exports = class Grid {
         this.init()
     }
     init() {
+         if (this.size >= 65535) {
+          throw "Maximum amount of buckets are 65535^2"      
+         }// Max limit is 65535 (16 bits) 
      for (var i = 0; i< this.size; ++i) {
         for (var j = 0; j< this.size; ++j) {
            var key = this._getKey(j,i);
@@ -51,9 +54,10 @@ module.exports = class Grid {
         }
     }
       _getKey(x,y) {
-       return (x << 16) | y // Max limit is 65535 (16 bits) 
+       return x | y 
              
       }
+       
     insert(node) {
 
         //   var a = this.getKey(node.bounds.width, node.bounds.height);
@@ -69,9 +73,12 @@ module.exports = class Grid {
         node.hash.k1 = k1
         node.hash.k2 = k2
         node.hash.level = this.LEVEL
-        for (var i = k1.y; i < k2.y + 1; i++) {
-            for (var j = k1.x; j < k2.x + 1; j++) {
-                var ke = this._getKey(j,i);
+      
+                for (var j = k1.x; j < k2.x + 1; ++j) {
+                    var x = j << 16;
+                    for (var i = k1.y; i < k2.y + 1; ++i) {
+                           
+                var ke = this._getKey(x,i);
                 this.DATA[ke].set(node._HashID, node)
             }
 
@@ -82,9 +89,12 @@ module.exports = class Grid {
         var k1 = node.hash.k1
         var k2 = node.hash.k2
         this.LENGTH--;
-        for (var i = k1.y; i < k2.y + 1; i++) {
-            for (var j = k1.x; j < k2.x + 1; j++) {
-                  var ke = this._getKey(j,i);
+            for (var j = k1.x; j < k2.x + 1; ++j) {
+                     var x = j << 16;
+        for (var i = k1.y; i < k2.y + 1; ++i) {
+               
+           
+                  var ke = this._getKey(x,i);
 
                 this.DATA[ke].delete(node._HashID)
             }
@@ -101,9 +111,11 @@ module.exports = class Grid {
 
         var k1 = this.getKey(x1, y1)
         var k2 = this.getKey(x2, y2)
-        for (var i = k1.y; i < k2.y + 1; i++) {
-            for (var j = k1.x; j < k2.x + 1; j++) {
-                   var ke = this._getKey(j,i);
+          for (var j = k1.x; j < k2.x + 1; ++j) {
+                 var x = j << 16;
+        for (var i = k1.y; i < k2.y + 1;++i) {
+          
+                   var ke = this._getKey(x,i);
 
                 if (this.DATA[ke]) this.DATA[ke].forEach((node, i) => {
 
@@ -125,9 +137,11 @@ module.exports = class Grid {
 
         var k1 = this.getKey(x1, y1)
         var k2 = this.getKey(x2, y2)
-        for (var i = k1.y; i < k2.y + 1; i++) {
-            for (var j = k1.x; j < k2.x + 1; j++) {
-                   var ke = this._getKey(j,i);
+        for (var j = k1.x; j < k2.x + 1; ++j) {
+                 var x = j << 16;
+        for (var i = k1.y; i < k2.y + 1; ++i) {
+           
+                   var ke = this._getKey(x,i);
 
                 if (this.DATA[ke])
                     if (!this._every(this.DATA[ke], (a, b) => {
@@ -151,9 +165,11 @@ module.exports = class Grid {
 
         var k1 = this.getKey(x1, y1)
         var k2 = this.getKey(x2, y2)
-        for (var i = k1.y; i < k2.y + 1; i++) {
-            for (var j = k1.x; j < k2.x + 1; j++) {
-               var ke = this._getKey(j,i);
+        for (var j = k1.x; j < k2.x + 1; ++j) {
+                 var x = j << 16;
+        for (var i = k1.y; i < k2.y + 1; ++i) {
+          
+               var ke = this._getKey(x,i);
 
                 if (this.DATA[ke])
                     this.DATA[ke].forEach((a, b) => {
