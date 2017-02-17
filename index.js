@@ -69,9 +69,9 @@ module.exports = class HashBounds {
     createLevels() {
         this.LEVELS = [];
         var a = this.INITIAL;
-        for (var i = 0; i < this.LVL; i++) {
+        for (var i = 0; i < this.LVL; i++,a++) {
             
-            this.LEVELS.push(new Grid(a++,i,this.MAX >> 0))
+            this.LEVELS.push(new Grid(a,i,this.MAX >> a))
         }
     }
        clear() {
