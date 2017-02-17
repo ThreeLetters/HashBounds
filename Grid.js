@@ -28,7 +28,7 @@ module.exports = class Grid {
     init() {
      for (var i = 0; i< this.size; ++i) {
         for (var j = 0; j< this.size; ++j) {
-           var key = j + ":" + i;
+           var key = this._getKey(j,i);
            this.DATA[key] = new Map()    
                
      }   
@@ -50,6 +50,10 @@ module.exports = class Grid {
             y: y >> this.POWER
         }
     }
+      _getKey(x,y) {
+       return (x << 8) | y // Max limit is 255 (8 bits) 
+             
+      }
     insert(node) {
 
         //   var a = this.getKey(node.bounds.width, node.bounds.height);
@@ -67,7 +71,7 @@ module.exports = class Grid {
         node.hash.level = this.LEVEL
         for (var i = k1.y; i < k2.y + 1; i++) {
             for (var j = k1.x; j < k2.x + 1; j++) {
-                var ke = j + ":" + i;
+                var ke = this._getKey(j,i);
                 this.DATA[ke].set(node._HashID, node)
             }
 
@@ -80,7 +84,7 @@ module.exports = class Grid {
         this.LENGTH--;
         for (var i = k1.y; i < k2.y + 1; i++) {
             for (var j = k1.x; j < k2.x + 1; j++) {
-                var ke = j + ":" + i;
+                  var ke = this._getKey(j,i);
 
                 this.DATA[ke].delete(node._HashID)
             }
@@ -99,7 +103,7 @@ module.exports = class Grid {
         var k2 = this.getKey(x2, y2)
         for (var i = k1.y; i < k2.y + 1; i++) {
             for (var j = k1.x; j < k2.x + 1; j++) {
-                var ke = j + ":" + i;
+                   var ke = this._getKey(j,i);
 
                 if (this.DATA[ke]) this.DATA[ke].forEach((node, i) => {
 
@@ -123,7 +127,7 @@ module.exports = class Grid {
         var k2 = this.getKey(x2, y2)
         for (var i = k1.y; i < k2.y + 1; i++) {
             for (var j = k1.x; j < k2.x + 1; j++) {
-                var ke = j + ":" + i;
+                   var ke = this._getKey(j,i);
 
                 if (this.DATA[ke])
                     if (!this._every(this.DATA[ke], (a, b) => {
@@ -149,7 +153,7 @@ module.exports = class Grid {
         var k2 = this.getKey(x2, y2)
         for (var i = k1.y; i < k2.y + 1; i++) {
             for (var j = k1.x; j < k2.x + 1; j++) {
-                var ke = j + ":" + i;
+               var ke = this._getKey(j,i);
 
                 if (this.DATA[ke])
                     this.DATA[ke].forEach((a, b) => {
