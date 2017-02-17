@@ -91,7 +91,9 @@ module.exports = class HashBounds {
               return;
        }
         var len = this.LEVELS.length
-       var index = Math.max(len - ((node.bounds.width + node.bounds.height) >> (this.MIN - 2)),0)
+       var index = len - ((node.bounds.width + node.bounds.height) >> (this.MIN - 2))
+       if (index < 0) index = 0;
+       
        node._HashIndex = index;
            node._HashSize = node.bounds.width + node.bounds.height;
        this.LEVELS[index].insert(node);
