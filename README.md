@@ -8,11 +8,11 @@ A super efficient collision check reducer using pos hashes that can handle bound
 # Usage
 > npm install hashbounds
 
-##### Hashbounds(cellsize,dontUseBounds?,useCenter?,var)
+##### Hashbounds(basecellsize,lvls,max)
 
 ```
 var HashBounds = require('hashbounds')
-var hashBounds = new HashBounds(10,2) // size of parent cells (In squares of 2), amount of levels
+var hashBounds = new HashBounds(10,2,100) // size of parent cells (In squares of 2), amount of levels, maximum value
 var node = {
 bounds: {
 x: 10,
@@ -35,8 +35,6 @@ var nodes = hashBounds.toArray(bounds) // gets nodes that is in/near the bounds
 console.log(nodes.length)
 hashBounds.delete(node)// delete node
 ```
-
-
 
 
 ## How does it work?
