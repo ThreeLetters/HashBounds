@@ -276,3 +276,17 @@ function HashBounds(power, lvl, max) {
     }
 
 
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+     module.exports = HashBounds;
+   }
+   else {
+     if (typeof define === 'function' && define.amd) {
+       define([], function() {
+         return HashBounds;
+       });
+     }
+     else {
+       window.HashBounds = HashBounds;
+     }
+    }
+    
