@@ -51,7 +51,7 @@ module.exports = class Grid {
         }
     }
       _getKey(x,y) {
-       return (x << 8) | y // Max limit is 255 (8 bits) 
+       return (x << 16) | y // Max limit is 65535 (16 bits) 
              
       }
     insert(node) {
