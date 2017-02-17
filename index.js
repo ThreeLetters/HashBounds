@@ -56,9 +56,10 @@ Map.prototype.filter = function(c) {
 }
 */
 module.exports = class HashBounds {
-    constructor(power, lvl) {
+    constructor(power, lvl, max) {
         this.INITIAL = power;
         this.LVL = lvl;
+        this.MAX = max;
         this.MIN = power - lvl;
         this.LEVELS = []
         this.lastid = 0;
@@ -70,7 +71,7 @@ module.exports = class HashBounds {
         var a = this.INITIAL;
         for (var i = 0; i < this.LVL; i++) {
             
-            this.LEVELS.push(new Grid(a++,i))
+            this.LEVELS.push(new Grid(a++,i,this.MAX >> 0))
         }
     }
        clear() {
