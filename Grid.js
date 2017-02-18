@@ -43,14 +43,6 @@ module.exports = class Grid {
         }
 
     }
-    _every(m, c) {
-        var a = m.entries()
-        var b;
-        while (b = a.next().value) {
-            if (!c(b[1], b[0])) return false;
-        }
-        return true;
-    }
 
     getKey(x, y) {
         return {
