@@ -42,7 +42,9 @@ var by = i >> 1
                 var key = this._getKey(x, i);
                    
                 // console.log(key)
-                this.DATA[key] = new Holder(this.PREV[this._getKey(bx, by)]);
+                   
+                   if (this.PREV) var l = this.PREV[this._getKey(bx, by)]; else var l = false;
+                this.DATA[key] = new Holder();
 
             }
         }
