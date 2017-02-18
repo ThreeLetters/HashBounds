@@ -35,10 +35,10 @@ module.exports = class Grid {
         // console.log(this.SIZE)
         for (var j = this.MIN; j <= this.SIZE; ++j) {
             var x = j << 16
-            var bx = x >> 2;
+            var bx = (j >> 1) << 16;
             for (var i = this.MIN; i <= this.SIZE; ++i) {
 
-var by = i >> 2
+var by = i >> 1
                 var key = this._getKey(x, i);
                    
                 // console.log(key)
