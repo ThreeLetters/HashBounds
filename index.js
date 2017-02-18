@@ -56,11 +56,11 @@ var Grid = require('./Grid.js')
     }
     */
 module.exports = class HashBounds {
-    constructor(power, lvl, max,minc) {
+    constructor(power, lvl, max, minc) {
         this.INITIAL = power;
         this.LVL = lvl;
         this.MAX = max;
-           this.MINC = minc || 0;
+        this.MINC = minc || 0;
         this.MIN = power + 1;
         this.LEVELS = []
         this.lastid = 0;
@@ -75,14 +75,16 @@ module.exports = class HashBounds {
     }
     createLevels() {
         this.LEVELS = [];
-        var a = this.INITIAL;
-           var last = false
-        for (var i = 0; i < this.LVL; i++, a++) {
 
-            var grid = new Grid(a, i, this.MAX >> a,this.MINC >> a,last)
-            this.LEVELS.push(grid);
-               last = grid;
+        var last = false
+        for (var i = this.LVL - 1; i >= 0; --i) {
+            var a = this.INITIAL + i;
+
+            var grid = new Grid(a, i, this.MAX >> a, this.MINC >> a, last)
+            this.LEVELS[i] = grid;
+            last = grid;
         }
+
     }
     clear() {
         this.createLevels();
