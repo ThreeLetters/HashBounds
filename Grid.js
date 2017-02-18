@@ -16,10 +16,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+var Holder = require('./Holder.js')
 module.exports = class Grid {
-    constructor(g, p, size,minc) {
+    constructor(g, p, size,minc,prev) {
         this.POWER = g;
         this.LEVEL = p;
+           this.PREV = prev;
         this.SIZE = size;
            this.MIN = minc * -1;
         this.DATA = {};
@@ -33,15 +35,17 @@ module.exports = class Grid {
         // console.log(this.SIZE)
         for (var j = this.MIN; j <= this.SIZE; ++j) {
             var x = j << 16
+            var bx = x >> 2;
             for (var i = this.MIN; i <= this.SIZE; ++i) {
 
+var by = i >> 2
                 var key = this._getKey(x, i);
+                   
                 // console.log(key)
-                this.DATA[key] = new Map()
+                this.DATA[key] = new Holder(this.PREV[this._getKey(bx, by)]);
 
             }
         }
-
     }
 
     getKey(x, y) {
