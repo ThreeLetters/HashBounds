@@ -44,7 +44,7 @@ module.exports = class Grid {
 
                 if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)];
                 else var l = false;
-                this.DATA[key] = new Holder(l);
+                this.DATA[key] = new Holder(l, i);
 
             }
         }
@@ -79,10 +79,11 @@ module.exports = class Grid {
                 var key = this._getKey(x, i);
                 if (this.DATA[key]) {
 
-                    if (this.DATA[key].skip) {
+                    if (this.DATA[key].skip > 1) {
 
-                        i += this.DATA[key].skip - 1;
-                        console.log(this.DATA[key].skip)
+                        i = this.DATA[key].start + this.DATA[key].skip - 1;
+
+
                     } else {
 
                         if (!call(this.DATA[key])) return false

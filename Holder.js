@@ -1,14 +1,16 @@
 "use strict"
 
 module.exports = class Holder {
-    constructor(parent) {
+    constructor(parent, i) {
         this.parent = parent;
         if (this.parent) this.parent.children.push(this)
         this.map = new Map();
         this.len = 0;
-        this.skip = 2;
+        this.i = i;
+        this.skip = 1;
         this.id = ~~(Math.random() * 100)
         this.children = []
+        this.start = this.i;
     }
     set(id, node) {
 
@@ -35,12 +37,16 @@ module.exports = class Holder {
     }
     sub() {
         --this.len;
-        if (!this.len) this.skip = 1;
-
+        if (!this.len) {
+            this.skip = 1;
+            this.start = this.i;
+        }
         if (this.parent) {
             this.parent.sub();
-            this.skip = this.parent.skip * 2;
-
+            if (this.parent.skip) {
+                this.skip = this.parent.skip * 2;
+                this.start = this.parent.start * 2;
+            }
         }
     }
     delete(id) {
