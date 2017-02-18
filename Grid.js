@@ -18,12 +18,12 @@
 */
 var Holder = require('./Holder.js')
 module.exports = class Grid {
-    constructor(g, p, size,minc,prev) {
+    constructor(g, p, size, minc, prev) {
         this.POWER = g;
         this.LEVEL = p;
-           this.PREV = prev;
+        this.PREV = prev;
         this.SIZE = size;
-           this.MIN = minc * -1;
+        this.MIN = minc * -1;
         this.DATA = {};
         this.LENGTH = 0;
         this.init()
@@ -38,13 +38,13 @@ module.exports = class Grid {
             var bx = (j >> 1) << 16;
             for (var i = this.MIN; i <= this.SIZE; ++i) {
 
-var by = i >> 1
+                var by = i >> 1
                 var key = this._getKey(x, i);
-                   
-                // console.log(key)
-                   
-                   if (this.PREV) var l = this.PREV[this._getKey(bx, by)]; else var l = false;
-                this.DATA[key] = new Holder();
+
+
+                if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)];
+                else var l = false;
+                this.DATA[key] = new Holder(l);
 
             }
         }
@@ -60,35 +60,39 @@ var by = i >> 1
         return x | y
 
     }
-       _get(bounds,call) {
-               var x1 = bounds.x,
+    _get(bounds, call) {
+        var x1 = bounds.x,
             y1 = bounds.y,
             x2 = bounds.x + bounds.width,
             y2 = bounds.y + bounds.height;
 
         var k1 = this.getKey(x1, y1)
         var k2 = this.getKey(x2, y2)
-    
-         for (var j = k1.x; j <= k2.x; ++j) {
-            
+
+        for (var j = k1.x; j <= k2.x; ++j) {
+
             var x = j << 16;
+
             for (var i = k1.y; i <= k2.y; ++i) {
 
 
                 var key = this._getKey(x, i);
-              if (this.DATA[key]) {
-                     if (this.DATA[key].parent && !this.DATA[key].parent.len) {
-                            i += 2;
-                      
-                     } else {
-                     call(this.DATA[key]) || (return false)
-                     }
-              }
-                   
+                if (this.DATA[key]) {
+
+                    if (this.DATA[key].skip) {
+
+                        i += this.DATA[key].skip - 1;
+                        console.log(this.DATA[key].skip)
+                    } else {
+
+                        if (!call(this.DATA[key])) return false
+                    }
+                }
+
             }
-         }
-              return true;
-       }
+        }
+        return true;
+    }
 
     insert(node) {
 
@@ -140,46 +144,46 @@ var by = i >> 1
     toArray(array, bounds) {
         if (this.LENGTH <= 0) return;
         var hsh = {};
-           
-           this._get(bounds,function(cell) {
-                  
-                  cell.forEach(function(obj,i) {
-                               if (hsh[i]) return
-                         hsh[i] = true;
-                         array.push(obj);
-                        
-                               })
-                  return true;
-           })
+
+        this._get(bounds, function (cell) {
+
+            cell.forEach(function (obj, i) {
+                if (hsh[i]) return
+                hsh[i] = true;
+                array.push(obj);
+
+            })
+            return true;
+        })
     }
     every(bounds, call) {
-     if (this.LENGTH <= 0) return;
+        if (this.LENGTH <= 0) return;
         var hsh = {};
-           
-           this._get(bounds,function(cell) {
-                  
-                 return cell.every(function(obj,i) {
-                               if (hsh[i]) return true;
-                         hsh[i] = true;
-                        return call(obj);
-                        
-                               })
-           })
+
+        this._get(bounds, function (cell) {
+
+            return cell.every(function (obj, i) {
+                if (hsh[i]) return true;
+                hsh[i] = true;
+                return call(obj);
+
+            })
+        })
     }
     forEach(bounds, call) {
-   
- if (this.LENGTH <= 0) return;
+
+        if (this.LENGTH <= 0) return;
         var hsh = {};
-           
-           this._get(bounds,function(cell) {
-                  
-                 cell.every(function(obj,i) {
-                               if (hsh[i]) return;
-                         hsh[i] = true;
-                        call(obj);
-                        
-                               })
-                  return true;
-           })
+
+        this._get(bounds, function (cell) {
+
+            cell.every(function (obj, i) {
+                if (hsh[i]) return;
+                hsh[i] = true;
+                call(obj);
+
+            })
+            return true;
+        })
     }
 }
