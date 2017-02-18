@@ -145,7 +145,7 @@ Grid.prototype._get = function (bounds, call) {
 
                     i = (this.DATA[key].start + this.DATA[key].skip - 1);
 
-                    console.log(this.DATA[key].start, this.DATA[key].skip)
+                    //console.log(this.DATA[key].start, this.DATA[key].skip)
                 } else {
 
                     if (!call(this.DATA[key])) return false
@@ -240,7 +240,7 @@ Grid.prototype.forEach = function (bounds, call) {
 
     this._get(bounds, function (cell) {
 
-        cell.every(function (obj, i) {
+        cell.forEach(function (obj, i) {
             if (hsh[i]) return;
             hsh[i] = true;
             call(obj);

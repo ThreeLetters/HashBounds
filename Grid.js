@@ -178,7 +178,7 @@ module.exports = class Grid {
 
         this._get(bounds, function (cell) {
 
-            cell.every(function (obj, i) {
+            cell.forEach(function (obj, i) {
                 if (hsh[i]) return;
                 hsh[i] = true;
                 call(obj);
