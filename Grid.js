@@ -68,9 +68,9 @@ var by = i >> 1
 
         var k1 = this.getKey(x1, y1)
         var k2 = this.getKey(x2, y2)
-        var javoid = [];
+    
          for (var j = k1.x; j <= k2.x; ++j) {
-                if (javoid[j]) continue;
+            
             var x = j << 16;
             for (var i = k1.y; i <= k2.y; ++i) {
 
@@ -79,7 +79,7 @@ var by = i >> 1
               if (this.DATA[key]) {
                      if (this.DATA[key].parent && !this.DATA[key].parent.len) {
                             i += 2;
-                            javoid[j + 1] = true;
+                      
                      } else {
                      call(this.DATA[key]) || (return false)
                      }
