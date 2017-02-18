@@ -60,6 +60,35 @@ var by = i >> 1
         return x | y
 
     }
+       _get(bounds,call) {
+               var x1 = bounds.x,
+            y1 = bounds.y,
+            x2 = bounds.x + bounds.width,
+            y2 = bounds.y + bounds.height;
+
+        var k1 = this.getKey(x1, y1)
+        var k2 = this.getKey(x2, y2)
+        var javoid = [];
+         for (var j = k1.x; j <= k2.x; ++j) {
+                if (javoid[j]) continue;
+            var x = j << 16;
+            for (var i = k1.y; i <= k2.y; ++i) {
+
+
+                var key = this._getKey(x, i);
+              if (this.DATA[key]) {
+                     if (this.DATA[key].parent && !this.DATA[key].parent.len) {
+                            i += 2;
+                            javoid[j + 1] = true;
+                     } else {
+                     call(this.DATA[key]) || (return false)
+                     }
+              }
+                   
+            }
+         }
+              return true;
+       }
 
     insert(node) {
 
@@ -110,89 +139,47 @@ var by = i >> 1
     }
     toArray(array, bounds) {
         if (this.LENGTH <= 0) return;
-        var x1 = bounds.x,
-            y1 = bounds.y,
-            x2 = bounds.x + bounds.width,
-            y2 = bounds.y + bounds.height,
-            h = {};
-
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
-        var lenX = k2.x + 1,
-            lenY = k2.y + 1;
-        for (var j = k1.x; j < lenX; ++j) {
-            var x = j << 16;
-            for (var i = k1.y; i < lenY; ++i) {
-
-                var ke = this._getKey(x, i);
-
-                if (this.DATA[ke]) this.DATA[ke].forEach((node, i) => {
-
-                    if (h[i]) return;
-                    h[i] = true;
-                    array.push(node)
-                })
-            }
-
-        }
+        var hsh = {};
+           
+           this._get(bounds,function(cell) {
+                  
+                  cell.forEach(function(obj,i) {
+                               if (hsh[i]) return
+                         hsh[i] = true;
+                         array.push(obj);
+                        
+                               })
+                  return true;
+           })
     }
     every(bounds, call) {
-        if (this.LENGTH <= 0) return true;
-        var x1 = bounds.x,
-            y1 = bounds.y,
-            x2 = bounds.x + bounds.width,
-            y2 = bounds.y + bounds.height,
-            h = {};
-
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
-        var lenX = k2.x + 1,
-            lenY = k2.y + 1;
-        for (var j = k1.x; j < lenX; ++j) {
-            var x = j << 16;
-            for (var i = k1.y; i < lenY; ++i) {
-
-                var ke = this._getKey(x, i);
-
-                if (this.DATA[ke])
-                    if (!this._every(this.DATA[ke], (a, b) => {
-
-                            if (h[b]) return true;
-                            h[b] = true;
-                            return call(a, b);
-                        })) return false;
-            }
-
-        }
-        return true;
+     if (this.LENGTH <= 0) return;
+        var hsh = {};
+           
+           this._get(bounds,function(cell) {
+                  
+                 return cell.every(function(obj,i) {
+                               if (hsh[i]) return true;
+                         hsh[i] = true;
+                        return call(obj);
+                        
+                               })
+           })
     }
     forEach(bounds, call) {
-        if (this.LENGTH <= 0) return;
-        var x1 = bounds.x,
-            y1 = bounds.y,
-            x2 = bounds.x + bounds.width,
-            y2 = bounds.y + bounds.height,
-            h = {};
-
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
-        var lenX = k2.x + 1,
-            lenY = k2.y + 1;
-        for (var j = k1.x; j < lenX; ++j) {
-            var x = j << 16;
-            for (var i = k1.y; i < lenY; ++i) {
-
-                var ke = this._getKey(x, i);
-
-                if (this.DATA[ke])
-                    this.DATA[ke].forEach((a, b) => {
-                        if (h[b]) return;
-                        h[b] = true;
-                        call(a, b)
-                    })
-            }
-
-        }
-
+   
+ if (this.LENGTH <= 0) return;
+        var hsh = {};
+           
+           this._get(bounds,function(cell) {
+                  
+                 cell.every(function(obj,i) {
+                               if (hsh[i]) return;
+                         hsh[i] = true;
+                        call(obj);
+                        
+                               })
+                  return true;
+           })
     }
 }
