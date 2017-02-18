@@ -4,13 +4,25 @@ module.exports = class Holder {
   constructor(parent) {
     this.parent = parent;
     this.map = new Map();
+    this.len = 0;
     this.children = [];
   }
   set(id,node) {
+    
     this.map.set(id,node)
+      this.add()
+  }
+  add() {
+    ++this.len;
+    if (this.parent) this.parent.add();
+  }
+  sub() {
+    --this.len;
+    if (this.parent) this.parent.sub();
   }
   delete(id) {
    this.map.delete(id) 
+    this.sub()
   }
   every(c) {
         var a = this.map.entries()
