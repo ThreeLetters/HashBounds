@@ -44,7 +44,7 @@ module.exports = class Grid {
 
                 if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)];
                 else var l = false;
-                this.DATA[key] = new Holder(l, i);
+                this.DATA[key] = new Holder(l, j,i,this.POWER,this.LVL);
 
             }
         }
@@ -78,16 +78,7 @@ module.exports = class Grid {
 
                 var key = this._getKey(x, i);
                 if (this.DATA[key]) {
-
-                    if (this.DATA[key].skip > 1) {
-
-                        i = this.DATA[key].start + this.DATA[key].skip - 1;
-
-
-                    } else {
-
                         if (!call(this.DATA[key])) return false
-                    }
                 }
 
             }
@@ -148,7 +139,7 @@ module.exports = class Grid {
 
         this._get(bounds, function (cell) {
 
-            cell.forEach(function (obj, i) {
+            cell.forEach(bounds,function (obj, i) {
                 if (hsh[i]) return
                 hsh[i] = true;
                 array.push(obj);
@@ -163,7 +154,7 @@ module.exports = class Grid {
 
         this._get(bounds, function (cell) {
 
-            return cell.every(function (obj, i) {
+            return cell.every(bounds,function (obj, i) {
                 if (hsh[i]) return true;
                 hsh[i] = true;
                 return call(obj);
@@ -178,12 +169,12 @@ module.exports = class Grid {
 
         this._get(bounds, function (cell) {
 
-            cell.forEach(function (obj, i) {
+            cell.forEach(bounds,function (obj, i) {
                 if (hsh[i]) return;
                 hsh[i] = true;
                 call(obj);
 
-            })
+            },)
             return true;
         })
     }
