@@ -165,7 +165,6 @@ Grid.prototype.init = function () {
 
 
             var l = this.PREV.DATA[this._getKey(bx, by)];
-             l = l || false;
             this.DATA[key] = new Holder(l, j, i, this.POWER, this.LVL);
 
         }
