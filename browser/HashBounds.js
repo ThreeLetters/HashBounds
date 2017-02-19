@@ -15,70 +15,85 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-function Holder(parent, i) {
-    this.parent = parent;
-    if (this.parent) this.parent.children.push(this)
-    this.map = new Map();
-    this.len = 0;
-    this.skip = 1;
-    this.id = ~~(Math.random() * 100)
-    this.children = []
-    this.i = i;
-    this.start = this.i;
-}
+function Holder(parent, x,y,power,lvl) {
+        this.PARENT = parent;
+        if (this.PARENT) this.PARENT.CHILDREN.push(this)
+        this.MAP = new Map();
+        this.POWER = power;
+        this.LVL = lvl
+        this.LEN = 0;
+        this.X = x;
+        this.Y = y;
+      this.BOUNDS = {
+       x: x << power,
+       y: y << power,
+       width: 2 << power,
+       height: 2 << power
+      }
+        this.CHILDREN = []
+      
+    }
+ Holder.prototype.checkIntersect = function(r1,r2) {
+     var mx1 = r1.x + r1.width,
+         mx2 = r2.x + r2.width,
+         my1 = r1.y + r1.height,
+         my2 = r2.y + r2.height;
+        /*
+        !(r2.left > r1.right || 
+           r2.right < r1.left || 
+           r2.top > r1.bottom ||
+           r2.bottom < r1.top);
+        
+        */
+     return !(r2.x >= mx1 || mx2 <= r1.x || r2.y >= my1 || my2 <= r1.y)
+     
+    }
 Holder.prototype.set = function (id, node) {
 
-    this.map.set(id, node)
+    this.MAP.set(id, node)
     this.add()
 }
 Holder.prototype.add = function () {
-    ++this.len;
-
-    this.skip = 0;
-
-    if (this.parent) {
-        this.parent.add();
+    ++this.LEN;
+    if (this.PARENT) {
+        this.PARENT.add();
 
 
     }
-}
-Holder.prototype.toArray = function () {
-    var nodes = [];
-    this.map.forEach(function (n) {
-        nodes.push(n)
-    })
-    return nodes
 }
 Holder.prototype.sub = function () {
-    --this.len;
-    if (!this.len) {
-        this.skip = 1;
-        this.start = this.i;
-    }
-    if (this.parent) {
-        this.parent.sub();
-        if (this.parent.skip) {
-            this.skip = this.parent.skip << 1;
-            this.start = this.parent.start << 1;
-        }
-
+    --this.LEN;
+    if (this.PARENT) {
+        this.PARENT.sub();
     }
 }
 Holder.prototype.delete = function (id) {
-    this.map.delete(id)
+    this.MAP.delete(id)
     this.sub()
 }
-Holder.prototype.every = function (c) {
-    var a = this.map.entries()
+Holder.prototype._get = function(bounds,call) {
+        if (!this.LEN) return true;
+        if (!this._every(call)) return false;
+        if (this.CHILDREN[0]) {
+            for (var i = 0; i < 4; ++i) {
+              if (this.checkIntersect(bounds,this.CHILDREN[i].bounds)) {
+                 if (!this.CHILDREN[i]._get(bounds,call)) return false;
+              }
+            }
+           
+        }
+        return true;
+    }
+Holder.prototype._every = function (c) {
+    var a = this.MAP.entries()
     var b;
     while (b = a.next().value) {
         if (!c(b[1], b[0])) return false;
     }
     return true;
 }
-Holder.prototype.forEach = function (c) {
-    return this.map.forEach(c);
-}
+
+
 
 function Grid(g, p, size, minc, prev) {
     this.POWER = g;
@@ -140,16 +155,7 @@ Grid.prototype._get = function (bounds, call) {
 
             var key = this._getKey(x, i);
             if (this.DATA[key]) {
-
-                if (this.DATA[key].skip > 1) {
-
-                    i = (this.DATA[key].start + this.DATA[key].skip - 1);
-
-                    //console.log(this.DATA[key].start, this.DATA[key].skip)
-                } else {
-
-                    if (!call(this.DATA[key])) return false
-                }
+                    if (!call(this.DATA[key])) return false          
             }
 
         }
@@ -210,11 +216,11 @@ Grid.prototype.toArray = function (array, bounds) {
 
     this._get(bounds, function (cell) {
 
-        cell.forEach(function (obj, i) {
-            if (hsh[i]) return
+        cell._get(bounds,function (obj, i) {
+            if (hsh[i]) return true;
             hsh[i] = true;
             array.push(obj);
-
+return true;
         })
         return true;
     })
@@ -225,7 +231,7 @@ Grid.prototype.every = function (bounds, call) {
 
     this._get(bounds, function (cell) {
 
-        return cell.every(function (obj, i) {
+        return cell._get(bounds,function (obj, i) {
             if (hsh[i]) return true;
             hsh[i] = true;
             return call(obj);
@@ -240,11 +246,11 @@ Grid.prototype.forEach = function (bounds, call) {
 
     this._get(bounds, function (cell) {
 
-        cell.forEach(function (obj, i) {
-            if (hsh[i]) return;
+        cell._get(bounds,function (obj, i) {
+            if (hsh[i]) return true;
             hsh[i] = true;
             call(obj);
-
+            return true;
         })
         return true;
     })
@@ -258,6 +264,7 @@ function HashBounds(power, lvl, max, minc) {
     this.MINC = minc || 0;
     this.MIN = power + 1;
     this.LEVELS = []
+       this.BASE = false;
     this.lastid = 0;
     this.createLevels()
     this.SQRT = [];
@@ -276,6 +283,7 @@ HashBounds.prototype.createLevels = function () {
         var a = this.INITIAL + i;
 
         var grid = new Grid(a, i, this.MAX >> a, this.MINC >> a, last)
+        if (!this.BASE) this.BASE = grid;
         this.LEVELS[i] = grid;
         last = grid;
     }
@@ -316,20 +324,11 @@ HashBounds.prototype.delete = function (node) {
     node.hash = null;
 }
 HashBounds.prototype.toArray = function (bounds) {
-    var array = [];
-    for (var i = 0; i < this.LEVELS.length; i++) {
-        this.LEVELS[i].toArray(array, bounds)
-    }
-    return array;
+  this.BASE.toArray(bounds)
 }
 HashBounds.prototype.every = function (bounds, call) {
-    for (var i = 0; i < this.LEVELS.length; i++) {
-        if (!this.LEVELS[i].every(bounds, call)) return false;
-    }
-    return true;
+   return this.BASE.every(bounds,call)
 }
 HashBounds.prototype.forEach = function (bounds, call) {
-    for (var i = 0; i < this.LEVELS.length; i++) {
-        this.LEVELS[i].forEach(bounds, call)
-    }
+ this.BASE.forEach(bounds,call)
 }
