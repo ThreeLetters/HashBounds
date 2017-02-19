@@ -99,14 +99,14 @@ module.exports = class Grid {
         var k2 = this.getKey(x2, y2)
         node.hash.k1 = k1
         node.hash.k2 = k2
-        node.hash.level = this.LEVEL
-        var lenX = k2.x + 1,
-            lenY = k2.y + 1;
-        for (var j = k1.x; j < lenX; ++j) {
+        node.hash.level = this.LEVEL;
+        node.hash.keys = [];
+        for (var j = k1.x; j <= k2.x; ++j) {
             var x = j << 16;
-            for (var i = k1.y; i < lenY; ++i) {
+            for (var i = k1.y; i <= k2.y; ++i) {
 
                 var ke = this._getKey(x, i);
+                   node.hash.keys.push(ke)
                 // console.log(ke)
                 this.DATA[ke].set(node._HashID, node)
             }
@@ -114,17 +114,11 @@ module.exports = class Grid {
         }
         return true;
     }
-    delete(node) {
-        var k1 = node.hash.k1
-        var k2 = node.hash.k2
-        var lenX = k2.x + 1,
-            lenY = k2.y + 1;
-        for (var j = k1.x; j < lenX; ++j) {
-            var x = j << 16;
-            for (var i = k1.y; i < lenY; ++i) {
+    delete(node) {  
+            for (var i = 0; i < node.hash.keys.length; ++i) {
 
 
-                var ke = this._getKey(x, i);
+                var ke = node.hash.keys[i]
 
                 this.DATA[ke].delete(node._HashID)
             }
