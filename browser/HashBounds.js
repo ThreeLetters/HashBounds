@@ -77,7 +77,7 @@ function LinkedList() {
 function Holder(parent, x, y, power, lvl) {
     this.PARENT = parent;
     this.PARENT.CHILDREN.push(this)
-    this.MAP = new Map();
+    this.MAP = new LinkedList();
     this.POWER = power;
     this.LVL = lvl
     this.LEN = 0;
