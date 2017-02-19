@@ -108,7 +108,7 @@ module.exports = class Grid {
                 var ke = this._getKey(x, i);
        
                 // console.log(ke)
-                this.DATA[ke].set(node._HashID, node)
+                this.DATA[ke].insert(node)
             }
 
         }
@@ -126,7 +126,7 @@ module.exports = class Grid {
 
                 var ke = this._getKey(x, i);
 
-                this.DATA[ke].delete(node._HashID)
+                this.DATA[ke].delete(node)
             }
 
         }
@@ -136,9 +136,9 @@ module.exports = class Grid {
 
         this._get(bounds, function (cell) {
 
-            cell.forEach(bounds, function (obj, i) {
-                if (hsh[i]) return true;
-                hsh[i] = true;
+            cell.forEach(bounds, function (obj) {
+                if (hsh[obj._HashID]) return true;
+                hsh[obj._HashID] = true;
                 array.push(obj);
                 return true;
             })
@@ -151,8 +151,8 @@ module.exports = class Grid {
         this._get(bounds, function (cell) {
 
             return cell.every(bounds, function (obj, i) {
-                if (hsh[i]) return true;
-                hsh[i] = true;
+                if (hsh[obj._HashID]) return true;
+                hsh[obj._HashID] = true;
                 return call(obj);
 
             })
@@ -165,8 +165,8 @@ module.exports = class Grid {
         this._get(bounds, function (cell) {
 
             cell._get(bounds, function (obj, i) {
-                if (hsh[i]) return true;
-                hsh[i] = true;
+                if (hsh[obj._HashID]) return true;
+                hsh[obj._HashID] = true;
                 call(obj);
                 return true;
             })
