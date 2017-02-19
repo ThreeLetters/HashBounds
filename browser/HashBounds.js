@@ -65,7 +65,7 @@ function LinkedList() {
      if (this.LIST.NODE == node)
       this.LIST = this.LIST.PARENT;
     else 
-      this.LIST.delete = function(node);
+      this.LIST.delete(node);
       
   }
   LinkedList.prototype.forEach = function(call) {
