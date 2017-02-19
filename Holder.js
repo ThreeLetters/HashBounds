@@ -3,7 +3,7 @@
 module.exports = class Holder {
     constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
-        if (this.PARENT) this.PARENT.CHILDREN.push(this)
+         this.PARENT.CHILDREN.push(this)
         this.MAP = new Map();
         this.POWER = power;
         this.LVL = lvl
