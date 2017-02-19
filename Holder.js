@@ -44,7 +44,7 @@ module.exports = class Holder {
         this.add()
     }
     add() {
-        ++this.len;
+        ++this.LEN;
 
        
 
@@ -56,6 +56,7 @@ module.exports = class Holder {
     }
   
     _get(bounds,call) {
+        if (!this.LEN) return true;
         if (!this._every(call)) return false;
         if (this.CHILDREN) {
             for (var i = 0; i < 4; ++i) {
@@ -68,7 +69,7 @@ module.exports = class Holder {
         return true;
     }
     sub() {
-        --this.len;
+        --this.LEN;
         if (this.PARENT) {
             this.PARENT.sub();
             
