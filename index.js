@@ -42,6 +42,7 @@ module.exports = class HashBounds {
 
         var last = {
          CHILDREN: [],
+         DATA: [],
           add: function() {},
                sub: function() {}
                
