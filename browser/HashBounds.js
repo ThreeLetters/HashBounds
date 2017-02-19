@@ -259,7 +259,7 @@ Grid.prototype.toArray = function (array, bounds) {
 
         cell._get(bounds, function (obj, i) {
             if (hsh[obj._HashID]) return true;
-            hsh[obj._HashID]] = true;
+            hsh[obj._HashID] = true;
             array.push(obj);
             return true;
         })
@@ -273,8 +273,8 @@ Grid.prototype.every = function (bounds, call) {
     this._get(bounds, function (cell) {
 
         return cell._get(bounds, function (obj, i) {
-            if (hsh[obj._HashID]]) return true;
-            hsh[obj._HashID]] = true;
+            if (hsh[obj._HashID]) return true;
+            hsh[obj._HashID] = true;
             return call(obj);
 
         })
@@ -288,8 +288,8 @@ Grid.prototype.forEach = function (bounds, call) {
     this._get(bounds, function (cell) {
 
         cell._get(bounds, function (obj, i) {
-            if (hsh[obj._HashID]]) return true;
-            hsh[obj._HashID]] = true;
+            if (hsh[obj._HashID]) return true;
+            hsh[obj._HashID] = true;
             call(obj);
             return true;
         })
