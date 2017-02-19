@@ -222,11 +222,9 @@ Grid.prototype.insert = function (node) {
     node.hash.k1 = k1
     node.hash.k2 = k2
     node.hash.level = this.LEVEL
-    var lenX = k2.x + 1,
-        lenY = k2.y + 1;
-    for (var j = k1.x; j < lenX; ++j) {
+    for (var j = k1.x; j <= k2.x; ++j) {
         var x = j << 16;
-        for (var i = k1.y; i < lenY; ++i) {
+        for (var i = k1.y; i <= k2.y; ++i) {
 
             var ke = this._getKey(x, i);
             // console.log(ke)
