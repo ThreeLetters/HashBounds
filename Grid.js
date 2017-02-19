@@ -138,10 +138,10 @@ module.exports = class Grid {
         this._get(bounds, function (cell) {
 
             cell.forEach(bounds, function (obj) {
-                if (hsh[obj._HashID]) return true;
+                if (hsh[obj._HashID]) return;
                 hsh[obj._HashID] = true;
                 array.push(obj);
-                return true;
+              
             })
             return true;
         })
@@ -165,11 +165,11 @@ module.exports = class Grid {
 
         this._get(bounds, function (cell) {
 
-            cell._get(bounds, function (obj, i) {
-                if (hsh[obj._HashID]) return true;
+            cell.forEach(bounds, function (obj, i) {
+                if (hsh[obj._HashID]) return;
                 hsh[obj._HashID] = true;
                 call(obj);
-                return true;
+            
             })
             return true;
         })
