@@ -86,19 +86,19 @@ module.exports = class Holder {
         }
         return true;
     }
-    every(bounds,call,hsh) {
+    every(bounds,call) {
     
         return this._get(bounds,function(o,i) {
-            if (hsh[i]) return true; else hsh[i] = true;
+     
             return call(o,i)
             
             
         })
     }
-    forEach(bounds,call,hsh) {
+    forEach(bounds,call) {
         
         this._get(bounds,function(o,i) {
-            if (hsh[i]) return true; else hsh[i] = true;
+       
             call(o,i)
             
             return true;
