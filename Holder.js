@@ -58,7 +58,7 @@ module.exports = class Holder {
     _get(bounds,call) {
         if (!this.LEN) return true;
         if (!this._every(call)) return false;
-        if (this.CHILDREN) {
+        if (this.CHILDREN[0]) {
             for (var i = 0; i < 4; ++i) {
               if (this.checkIntersect(bounds,this.CHILDREN[i].bounds)) {
                  if (!this.CHILDREN[i]._get(bounds,call)) return false;
