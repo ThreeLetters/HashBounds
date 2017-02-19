@@ -54,11 +54,9 @@ module.exports = class Holder {
 
         }
     }
-    toArray(hsh) {
-        
-    }
+  
     _get(bounds,call) {
-        if (!this.every(call)) return false;
+        if (!this._every(call)) return false;
         if (this.CHILDREN) {
             for (var i = 0; i < 4; ++i) {
               if (this.checkIntersect(bounds,this.CHILDREN[i].bounds)) {
@@ -80,7 +78,7 @@ module.exports = class Holder {
         this.MAP.delete(id)
         this.sub()
     }
-    every(c) {
+    _every(c) {
         var a = this.MAP.entries()
         var b;
         while (b = a.next().value) {
@@ -88,6 +86,23 @@ module.exports = class Holder {
         }
         return true;
     }
-    
+    every(bounds,call) {
+    var hsh = [];
+        return this._get(bounds,function(o,i) {
+            if (hsh[i]) return true; else hsh[i] = true;
+            return call(o,i)
+            
+            
+        })
+    }
+    forEach(bounds,call) {
+        var hsh = [];
+        this._get(bounds,function(o,i) {
+            if (hsh[i]) return true; else hsh[i] = true;
+            call(o,i)
+            
+            return true;
+        })
+    }
     
 }
