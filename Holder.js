@@ -64,18 +64,31 @@ module.exports = class Holder {
         
     }
 
-    _get(bounds, call) {
+    every(bounds, call) {
         if (!this.LEN) return true;
         if (!this.MAP.every(call)) return false;
         if (this.CHILDREN[0]) {
             for (var i = 0; i < 4; ++i) {
                 if (this.checkIntersect(bounds, this.CHILDREN[i].BOUNDS)) {
-                    if (!this.CHILDREN[i]._get(bounds, call)) return false;
+                    if (!this.CHILDREN[i].every(bounds, call)) return false;
                 }
             }
 
         }
         return true;
+    }
+         forEach(bounds, call) {
+        if (!this.LEN) return;
+           this.MAP.forEach(call)
+        if (this.CHILDREN[0]) {
+            for (var i = 0; i < 4; ++i) {
+                if (this.checkIntersect(bounds, this.CHILDREN[i].BOUNDS)) {
+                    this.CHILDREN[i].forEach(bounds, call)
+                }
+            }
+
+        }
+        return;
     }
     sub() {
         --this.LEN;
