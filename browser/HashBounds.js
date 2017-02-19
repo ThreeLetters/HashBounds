@@ -15,9 +15,68 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+function Root() {
+   this.NODE = -1;
+ }
+  Root.prototype.delete = function() {
+    
+  }
+  Root.prototype.forEach = function() {
+    
+  }
+  Root.prototype.every = function() {
+    return true;
+  }
+  
+
+
+function Node(parent,node) {
+   this.PARENT = parent;
+   this.NODE = node;
+ }
+  
+  Node.prototype.delete = function(node) {
+    if (this.PARENT.NODE == node)
+      this.PARENT = this.PARENT.PARENT;
+    else 
+      this.PARENT.delete(node);
+      
+      
+  }
+  Node.prototype.forEach = function(call) {
+    call(this.NODE)
+    this.PARENT.forEach(call)
+  }
+  Node.prototype.every = function(call) {
+     if (!call(this.NODE)) return false;
+    return this.PARENT.forEach(call);
+  }
+  
+  
+
+
+function LinkedList() {
+    this.LIST = new Root()
+  }
+  LinkedList.prototype.insert = function(node) {
+    this.LIST = new Node(this.LIST,node);
+  }
+  LinkedList.prototype.delete = function(node) {
+     if (this.LIST.NODE == node)
+      this.LIST = this.LIST.PARENT;
+    else 
+      this.LIST.delete = function(node);
+      
+  }
+  LinkedList.prototype.forEach = function(call) {
+    this.LIST.forEach(call)
+  }
+  LinkedList.prototype.every = function(call) {
+    return this.LIST.every(call)
+  }
 function Holder(parent, x, y, power, lvl) {
     this.PARENT = parent;
-    if (this.PARENT) this.PARENT.CHILDREN.push(this)
+    this.PARENT.CHILDREN.push(this)
     this.MAP = new Map();
     this.POWER = power;
     this.LVL = lvl
@@ -49,32 +108,26 @@ Holder.prototype.checkIntersect = function (r1, r2) {
     return !(r2.x >= mx1 || mx2 <= r1.x || r2.y >= my1 || my2 <= r1.y)
 
 }
-Holder.prototype.set = function (id, node) {
+Holder.prototype.insert = function (node) {
 
-    this.MAP.set(id, node)
+    this.MAP.insert(node)
     this.add()
 }
 Holder.prototype.add = function () {
     ++this.LEN;
-    if (this.PARENT) {
         this.PARENT.add();
-
-
-    }
 }
 Holder.prototype.sub = function () {
     --this.LEN;
-    if (this.PARENT) {
         this.PARENT.sub();
-    }
 }
-Holder.prototype.delete = function (id) {
-    this.MAP.delete(id)
+Holder.prototype.delete = function (node) {
+    this.MAP.delete(node)
     this.sub()
 }
 Holder.prototype._get = function (bounds, call) {
     if (!this.LEN) return true;
-    if (!this._every(call)) return false;
+    if (!this.MAP.every(call)) return false;
     if (this.CHILDREN[0]) {
         for (var i = 0; i < 4; ++i) {
             if (this.checkIntersect(bounds, this.CHILDREN[i].BOUNDS)) {
@@ -82,14 +135,6 @@ Holder.prototype._get = function (bounds, call) {
             }
         }
 
-    }
-    return true;
-}
-Holder.prototype._every = function (c) {
-    var a = this.MAP.entries()
-    var b;
-    while (b = a.next().value) {
-        if (!c(b[1], b[0])) return false;
     }
     return true;
 }
@@ -185,7 +230,7 @@ Grid.prototype.insert = function (node) {
 
             var ke = this._getKey(x, i);
             // console.log(ke)
-            this.DATA[ke].set(node._HashID, node)
+            this.DATA[ke].insert(node)
         }
 
     }
@@ -203,7 +248,7 @@ Grid.prototype.delete = function (node) {
 
             var ke = this._getKey(x, i);
 
-            this.DATA[ke].delete(node._HashID)
+            this.DATA[ke].delete(node)
         }
 
     }
@@ -215,8 +260,8 @@ Grid.prototype.toArray = function (array, bounds) {
     this._get(bounds, function (cell) {
 
         cell._get(bounds, function (obj, i) {
-            if (hsh[i]) return true;
-            hsh[i] = true;
+            if (hsh[obj._HashID]) return true;
+            hsh[obj._HashID]] = true;
             array.push(obj);
             return true;
         })
@@ -230,8 +275,8 @@ Grid.prototype.every = function (bounds, call) {
     this._get(bounds, function (cell) {
 
         return cell._get(bounds, function (obj, i) {
-            if (hsh[i]) return true;
-            hsh[i] = true;
+            if (hsh[obj._HashID]]) return true;
+            hsh[obj._HashID]] = true;
             return call(obj);
 
         })
@@ -245,8 +290,8 @@ Grid.prototype.forEach = function (bounds, call) {
     this._get(bounds, function (cell) {
 
         cell._get(bounds, function (obj, i) {
-            if (hsh[i]) return true;
-            hsh[i] = true;
+            if (hsh[obj._HashID]]) return true;
+            hsh[obj._HashID]] = true;
             call(obj);
             return true;
         })
@@ -276,7 +321,12 @@ HashBounds.prototype.setupSQRT = function () {
 HashBounds.prototype.createLevels = function () {
     this.LEVELS = [];
 
-    var last = false
+    var last = {
+         CHILDREN: [],
+          add: function() {},
+               sub: function() {}
+               
+        }
     for (var i = this.LVL - 1; i >= 0; --i) {
         var a = this.INITIAL + i;
 
