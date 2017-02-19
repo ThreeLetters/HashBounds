@@ -16,22 +16,22 @@ A super efficient collision check reducer. Also a good snack made out of potato 
 var HashBounds = require('hashbounds')
 var hashBounds = new HashBounds(10,2,100) // size of base cells (In squares of 2), amount of levels, maximum value
 var node = {
-bounds: {
-x: 10,
-y: 10,
-width: 5,
-height: 3
-}
+    bounds: {
+        x: 10,
+        y: 10,
+        width: 5,
+        height: 3
+    }
 }
 hashBounds.insert(node) // add node
 
 node.bounds.x = 4
 hashBounds.update(node) // Update node (for moving cells)
 var bounds = {
-x: 3,
-y: 0,
-width: 10,
-height: 10
+    x: 3,
+    y: 0,
+    width: 10,
+    height: 10
 }
 var nodes = hashBounds.toArray(bounds) // gets nodes that is in/near the bounds
 console.log(nodes.length)
@@ -48,12 +48,12 @@ In order for this to work, all objects inserted must have include `bounds`.
 
 ```
 var obj = {
-bounds: {
-x: 0, // x
-y: 0, // y
-width: 5, // width
-height: 5
-}
+    bounds: {
+        x: 0, // x
+        y: 0, // y
+        width: 5, // width
+        height: 5
+    }
 }
 ```
 
