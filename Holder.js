@@ -13,11 +13,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+var LinkedList = require('./LinkedList.js')
 module.exports = class Holder {
     constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
          this.PARENT.CHILDREN.push(this)
-        this.MAP = new Map();
+        this.MAP = new LinkedList();
         this.POWER = power;
         this.LVL = lvl
         this.LEN = 0;
@@ -53,7 +54,7 @@ module.exports = class Holder {
 
     set(id, node) {
 
-        this.MAP.set(id, node)
+        this.MAP.insert(node)
         this.add()
     }
     add() {
@@ -65,7 +66,7 @@ module.exports = class Holder {
 
     _get(bounds, call) {
         if (!this.LEN) return true;
-        if (!this._every(call)) return false;
+        if (!this.MAP.every(call)) return false;
         if (this.CHILDREN[0]) {
             for (var i = 0; i < 4; ++i) {
                 if (this.checkIntersect(bounds, this.CHILDREN[i].BOUNDS)) {
@@ -80,17 +81,10 @@ module.exports = class Holder {
         --this.LEN;
             this.PARENT.sub();
     }
-    delete(id) {
-        this.MAP.delete(id)
+    delete(node) {
+        this.MAP.delete(node)
         this.sub()
     }
-    _every(c) {
-        var a = this.MAP.entries()
-        var b;
-        while (b = a.next().value) {
-            if (!c(b[1], b[0])) return false;
-        }
-        return true;
-    }
+   
 
 }
