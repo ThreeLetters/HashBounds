@@ -54,12 +54,20 @@ module.exports = class Holder {
 
         }
     }
-    toArray() {
-        var nodes = [];
-        this.PARENT.forEach(function (n) {
-            nodes.push(n)
-        })
-        return nodes
+    toArray(hsh) {
+        
+    }
+    _get(bounds,call) {
+        if (!this.every(call)) return false;
+        if (this.CHILDREN) {
+            for (var i = 0; i < 4; ++i) {
+              if (this.checkIntersect(bounds,this.CHILDREN[i].bounds)) {
+                 if (!this.CHILDREN[i]._get(bounds,call)) return false;
+              }
+            }
+           
+        }
+        return true;
     }
     sub() {
         --this.len;
@@ -69,7 +77,7 @@ module.exports = class Holder {
         }
     }
     delete(id) {
-        this.PARENT.delete(id)
+        this.MAP.delete(id)
         this.sub()
     }
     every(c) {
@@ -80,8 +88,6 @@ module.exports = class Holder {
         }
         return true;
     }
-    forEach(c) {
-        return this.MAP.forEach(c);
-    }
+    
     
 }
