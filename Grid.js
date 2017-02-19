@@ -41,8 +41,8 @@ module.exports = class Grid {
                 var key = this._getKey(x, i);
 
 
-                if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)];
-                else var l = false;
+          var l = this.PREV.DATA[this._getKey(bx, by)];
+               
                 this.DATA[key] = new Holder(l, j, i, this.POWER, this.LVL);
 
             }
