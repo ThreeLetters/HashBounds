@@ -1,7 +1,7 @@
 "use strict"
 
 module.exports = class Holder {
-    constructor(parent, x,y,power,lvl) {
+    constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
         if (this.PARENT) this.PARENT.CHILDREN.push(this)
         this.MAP = new Map();
@@ -10,20 +10,20 @@ module.exports = class Holder {
         this.LEN = 0;
         this.X = x;
         this.Y = y;
-      this.BOUNDS = {
-       x: x << power,
-       y: y << power,
-       width: 2 << power,
-       height: 2 << power
-      }
+        this.BOUNDS = {
+            x: x << power,
+            y: y << power,
+            width: 2 << power,
+            height: 2 << power
+        }
         this.CHILDREN = []
-      
+
     }
-    checkIntersect(r1,r2) {
-     var mx1 = r1.x + r1.width,
-         mx2 = r2.x + r2.width,
-         my1 = r1.y + r1.height,
-         my2 = r2.y + r2.height;
+    checkIntersect(r1, r2) {
+        var mx1 = r1.x + r1.width,
+            mx2 = r2.x + r2.width,
+            my1 = r1.y + r1.height,
+            my2 = r2.y + r2.height;
         /*
         !(r2.left > r1.right || 
            r2.right < r1.left || 
@@ -31,13 +31,13 @@ module.exports = class Holder {
            r2.bottom < r1.top);
         
         */
-        
-        
-        
-     return !(r2.x >= mx1 || mx2 <= r1.x || r2.y >= my1 || my2 <= r1.y)
-     
+
+
+
+        return !(r2.x >= mx1 || mx2 <= r1.x || r2.y >= my1 || my2 <= r1.y)
+
     }
-    
+
     set(id, node) {
 
         this.MAP.set(id, node)
@@ -46,7 +46,7 @@ module.exports = class Holder {
     add() {
         ++this.LEN;
 
-       
+
 
         if (this.PARENT) {
             this.PARENT.add();
@@ -54,17 +54,17 @@ module.exports = class Holder {
 
         }
     }
-  
-    _get(bounds,call) {
+
+    _get(bounds, call) {
         if (!this.LEN) return true;
         if (!this._every(call)) return false;
         if (this.CHILDREN[0]) {
             for (var i = 0; i < 4; ++i) {
-              if (this.checkIntersect(bounds,this.CHILDREN[i].bounds)) {
-                 if (!this.CHILDREN[i]._get(bounds,call)) return false;
-              }
+                if (this.checkIntersect(bounds, this.CHILDREN[i].BOUNDS)) {
+                    if (!this.CHILDREN[i]._get(bounds, call)) return false;
+                }
             }
-           
+
         }
         return true;
     }
@@ -72,7 +72,7 @@ module.exports = class Holder {
         --this.LEN;
         if (this.PARENT) {
             this.PARENT.sub();
-            
+
         }
     }
     delete(id) {
@@ -87,5 +87,5 @@ module.exports = class Holder {
         }
         return true;
     }
-    
+
 }

@@ -25,7 +25,6 @@ module.exports = class Grid {
         this.SIZE = size;
         this.MIN = minc * -1;
         this.DATA = {};
-        this.LENGTH = 0;
         this.init()
     }
     init() {
@@ -44,7 +43,7 @@ module.exports = class Grid {
 
                 if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)];
                 else var l = false;
-                this.DATA[key] = new Holder(l, j,i,this.POWER,this.LVL);
+                this.DATA[key] = new Holder(l, j, i, this.POWER, this.LVL);
 
             }
         }
@@ -78,7 +77,7 @@ module.exports = class Grid {
 
                 var key = this._getKey(x, i);
                 if (this.DATA[key]) {
-                        if (!call(this.DATA[key])) return false
+                    if (!call(this.DATA[key])) return false
                 }
 
             }
@@ -90,7 +89,7 @@ module.exports = class Grid {
 
         //   var a = this.getKey(node.bounds.width, node.bounds.height);
         // if (a.x + a.y >= 2 && this.LEVEL != 0) return false;
-        this.LENGTH++;
+
         var x1 = node.bounds.x,
             y1 = node.bounds.y,
             x2 = node.bounds.x + node.bounds.width,
@@ -118,7 +117,6 @@ module.exports = class Grid {
     delete(node) {
         var k1 = node.hash.k1
         var k2 = node.hash.k2
-        this.LENGTH--;
         var lenX = k2.x + 1,
             lenY = k2.y + 1;
         for (var j = k1.x; j < lenX; ++j) {
@@ -134,27 +132,25 @@ module.exports = class Grid {
         }
     }
     toArray(array, bounds) {
-        if (this.LENGTH <= 0) return;
         var hsh = {};
 
         this._get(bounds, function (cell) {
 
-            cell.forEach(bounds,function (obj, i) {
+            cell.forEach(bounds, function (obj, i) {
                 if (hsh[i]) return true;
                 hsh[i] = true;
                 array.push(obj);
-return true;
+                return true;
             })
             return true;
         })
     }
     every(bounds, call) {
-        if (this.LENGTH <= 0) return;
         var hsh = {};
 
         this._get(bounds, function (cell) {
 
-            return cell.every(bounds,function (obj, i) {
+            return cell.every(bounds, function (obj, i) {
                 if (hsh[i]) return true;
                 hsh[i] = true;
                 return call(obj);
@@ -164,17 +160,16 @@ return true;
     }
     forEach(bounds, call) {
 
-        if (this.LENGTH <= 0) return;
         var hsh = {};
 
         this._get(bounds, function (cell) {
 
-            cell._get(bounds,function (obj, i) {
+            cell._get(bounds, function (obj, i) {
                 if (hsh[i]) return true;
                 hsh[i] = true;
                 call(obj);
-return true;
-            },)
+                return true;
+            }, )
             return true;
         })
     }

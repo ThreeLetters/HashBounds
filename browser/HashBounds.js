@@ -15,39 +15,40 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-function Holder(parent, x,y,power,lvl) {
-        this.PARENT = parent;
-        if (this.PARENT) this.PARENT.CHILDREN.push(this)
-        this.MAP = new Map();
-        this.POWER = power;
-        this.LVL = lvl
-        this.LEN = 0;
-        this.X = x;
-        this.Y = y;
-      this.BOUNDS = {
-       x: x << power,
-       y: y << power,
-       width: 2 << power,
-       height: 2 << power
-      }
-        this.CHILDREN = []
-      
+function Holder(parent, x, y, power, lvl) {
+    this.PARENT = parent;
+    if (this.PARENT) this.PARENT.CHILDREN.push(this)
+    this.MAP = new Map();
+    this.POWER = power;
+    this.LVL = lvl
+    this.LEN = 0;
+    this.X = x;
+    this.Y = y;
+    this.BOUNDS = {
+        x: x << power,
+        y: y << power,
+        width: 2 << power,
+        height: 2 << power
     }
- Holder.prototype.checkIntersect = function(r1,r2) {
-     var mx1 = r1.x + r1.width,
-         mx2 = r2.x + r2.width,
-         my1 = r1.y + r1.height,
-         my2 = r2.y + r2.height;
-        /*
-        !(r2.left > r1.right || 
-           r2.right < r1.left || 
-           r2.top > r1.bottom ||
-           r2.bottom < r1.top);
+    this.CHILDREN = []
+
+}
+Holder.prototype.checkIntersect = function (r1, r2) {
+    var mx1 = r1.x + r1.width,
+        mx2 = r2.x + r2.width,
+        my1 = r1.y + r1.height,
+        my2 = r2.y + r2.height;
+    /*
+    !(r2.left > r1.right || 
+       r2.right < r1.left || 
+       r2.top > r1.bottom ||
+       r2.bottom < r1.top);
         
-        */
-     return !(r2.x >= mx1 || mx2 <= r1.x || r2.y >= my1 || my2 <= r1.y)
-     
-    }
+    */
+
+    return !(r2.x >= mx1 || mx2 <= r1.x || r2.y >= my1 || my2 <= r1.y)
+
+}
 Holder.prototype.set = function (id, node) {
 
     this.MAP.set(id, node)
@@ -71,19 +72,19 @@ Holder.prototype.delete = function (id) {
     this.MAP.delete(id)
     this.sub()
 }
-Holder.prototype._get = function(bounds,call) {
-        if (!this.LEN) return true;
-        if (!this._every(call)) return false;
-        if (this.CHILDREN[0]) {
-            for (var i = 0; i < 4; ++i) {
-              if (this.checkIntersect(bounds,this.CHILDREN[i].bounds)) {
-                 if (!this.CHILDREN[i]._get(bounds,call)) return false;
-              }
+Holder.prototype._get = function (bounds, call) {
+    if (!this.LEN) return true;
+    if (!this._every(call)) return false;
+    if (this.CHILDREN[0]) {
+        for (var i = 0; i < 4; ++i) {
+            if (this.checkIntersect(bounds, this.CHILDREN[i].BOUNDS)) {
+                if (!this.CHILDREN[i]._get(bounds, call)) return false;
             }
-           
         }
-        return true;
+
     }
+    return true;
+}
 Holder.prototype._every = function (c) {
     var a = this.MAP.entries()
     var b;
@@ -102,7 +103,6 @@ function Grid(g, p, size, minc, prev) {
     this.SIZE = size;
     this.MIN = minc * -1;
     this.DATA = {};
-    this.LENGTH = 0;
     this.init()
 }
 Grid.prototype.init = function () {
@@ -121,7 +121,7 @@ Grid.prototype.init = function () {
 
             if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)];
             else var l = false;
-            this.DATA[key] = new Holder(l, j,i,this.POWER,this.LVL);
+            this.DATA[key] = new Holder(l, j, i, this.POWER, this.LVL);
 
         }
     }
@@ -155,7 +155,7 @@ Grid.prototype._get = function (bounds, call) {
 
             var key = this._getKey(x, i);
             if (this.DATA[key]) {
-                    if (!call(this.DATA[key])) return false          
+                if (!call(this.DATA[key])) return false
             }
 
         }
@@ -167,7 +167,6 @@ Grid.prototype.insert = function (node) {
 
     //   var a = this.getKey(node.bounds.width, node.bounds.height);
     // if (a.x + a.y >= 2 && this.LEVEL != 0) return false;
-    this.LENGTH++;
     var x1 = node.bounds.x,
         y1 = node.bounds.y,
         x2 = node.bounds.x + node.bounds.width,
@@ -195,7 +194,6 @@ Grid.prototype.insert = function (node) {
 Grid.prototype.delete = function (node) {
     var k1 = node.hash.k1
     var k2 = node.hash.k2
-    this.LENGTH--;
     var lenX = k2.x + 1,
         lenY = k2.y + 1;
     for (var j = k1.x; j < lenX; ++j) {
@@ -211,27 +209,27 @@ Grid.prototype.delete = function (node) {
     }
 }
 Grid.prototype.toArray = function (array, bounds) {
-    if (this.LENGTH <= 0) return;
+
     var hsh = {};
 
     this._get(bounds, function (cell) {
 
-        cell._get(bounds,function (obj, i) {
+        cell._get(bounds, function (obj, i) {
             if (hsh[i]) return true;
             hsh[i] = true;
             array.push(obj);
-return true;
+            return true;
         })
         return true;
     })
 }
 Grid.prototype.every = function (bounds, call) {
-    if (this.LENGTH <= 0) return;
+
     var hsh = {};
 
     this._get(bounds, function (cell) {
 
-        return cell._get(bounds,function (obj, i) {
+        return cell._get(bounds, function (obj, i) {
             if (hsh[i]) return true;
             hsh[i] = true;
             return call(obj);
@@ -241,12 +239,12 @@ Grid.prototype.every = function (bounds, call) {
 }
 Grid.prototype.forEach = function (bounds, call) {
 
-    if (this.LENGTH <= 0) return;
+
     var hsh = {};
 
     this._get(bounds, function (cell) {
 
-        cell._get(bounds,function (obj, i) {
+        cell._get(bounds, function (obj, i) {
             if (hsh[i]) return true;
             hsh[i] = true;
             call(obj);
@@ -264,7 +262,7 @@ function HashBounds(power, lvl, max, minc) {
     this.MINC = minc || 0;
     this.MIN = power + 1;
     this.LEVELS = []
-       this.BASE = false;
+    this.BASE = false;
     this.lastid = 0;
     this.createLevels()
     this.SQRT = [];
@@ -324,11 +322,11 @@ HashBounds.prototype.delete = function (node) {
     node.hash = null;
 }
 HashBounds.prototype.toArray = function (bounds) {
-  this.BASE.toArray(bounds)
+    this.BASE.toArray(bounds)
 }
 HashBounds.prototype.every = function (bounds, call) {
-   return this.BASE.every(bounds,call)
+    return this.BASE.every(bounds, call)
 }
 HashBounds.prototype.forEach = function (bounds, call) {
- this.BASE.forEach(bounds,call)
+    this.BASE.forEach(bounds, call)
 }
