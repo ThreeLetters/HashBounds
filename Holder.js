@@ -45,14 +45,9 @@ module.exports = class Holder {
     }
     add() {
         ++this.LEN;
-
-
-
-        if (this.PARENT) {
             this.PARENT.add();
 
-
-        }
+        
     }
 
     _get(bounds, call) {
@@ -70,10 +65,7 @@ module.exports = class Holder {
     }
     sub() {
         --this.LEN;
-        if (this.PARENT) {
             this.PARENT.sub();
-
-        }
     }
     delete(id) {
         this.MAP.delete(id)
