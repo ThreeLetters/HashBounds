@@ -52,7 +52,7 @@ module.exports = class Holder {
 
     }
 
-    insert(id, node) {
+    insert(node) {
 
         this.MAP.insert(node)
         this.add()
