@@ -40,13 +40,7 @@ module.exports = class HashBounds {
     createLevels() {
         this.LEVELS = [];
 
-        var last = {
-         CHILDREN: [],
-         DATA: [],
-          add: function() {},
-               sub: function() {}
-               
-        }
+        var last = false;
         for (var i = this.LVL - 1; i >= 0; --i) {
             var a = this.INITIAL + i;
 
