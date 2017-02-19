@@ -123,17 +123,10 @@ module.exports = class HashBounds {
         node.hash = null;
     }
     toArray(bounds) {
-        var array = [];
-        for (var i = 0; i < this.LEVELS.length; i++) {
-            this.LEVELS[i].toArray(array, bounds)
-        }
-        return array;
+        return this.BASE.toArray(bounds);
     }
     every(bounds, call) {
-        for (var i = 0; i < this.LEVELS.length; i++) {
-            if (!this.LEVELS[i].every(bounds, call)) return false;
-        }
-        return true;
+            return this.BASE.every(bounds,call);
     }
     forEach(bounds, call) {
   
