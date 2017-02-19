@@ -87,23 +87,5 @@ module.exports = class Holder {
         }
         return true;
     }
-    every(bounds,call) {
-    
-        return this._get(bounds,function(o,i) {
-     
-            return call(o,i)
-            
-            
-        })
-    }
-    forEach(bounds,call) {
-        
-        this._get(bounds,function(o,i) {
-       
-            call(o,i)
-            
-            return true;
-        })
-    }
     
 }
