@@ -53,6 +53,7 @@ module.exports = class QuickMapV2 {
   }
   delete(id) {
     this.ARRAY[id].destroy();
+   this.ARRAY[id] = null;
   }
   get(id) {
      return this.ARRAY[id].NODE;
