@@ -14,76 +14,73 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-class Root {
-    constructor() {
-        this.NODE = -1;
-    }
-    delete() {
-
-    }
-    forEach() {
-
-    }
-    every() {
-        return true;
-    }
-
+class Root() {
+ constructor() {
+   
+ }
+  forEach() {
+    
+  }
+  every() {
+   return true; 
+  }
+  
 }
 
-class Node {
-    constructor(parent, node) {
-        this.PARENT = parent;
-        this.NODE = node;
-    }
-
-    delete(node) {
-        if (this.PARENT.NODE == node)
-            this.PARENT = this.PARENT.PARENT;
-        else
-            this.PARENT.delete(node);
-
-
-    }
-    forEach(call) {
-        call(this.NODE)
-        this.PARENT.forEach(call)
-    }
-    every(call) {
-        if (!call(this.NODE)) return false;
-        return this.PARENT.forEach(call);
-    }
-
-
+class ListNode {
+ constructor(child,parent,node,id) {
+   this.CHILD = child;
+   this.NODE = node;
+   this.ID = id;
+   this.PARENT = parent;
+ }
+ destroy() {
+  this.PARENT.CHILD = this.CHILD;
+   this.CHILD.PARENT = PARENT;
+ }
+  forEach(call) {
+    call(this.NODE,this.ID);
+    this.CHILD.forEach(call);
+    
+  }
+  every(call) {
+    if (!call(this.NODE,this.ID)) return false;
+    return this.CHILD.forEach(call);
+  }
+  
 }
-
-class LinkedList {
-    constructor() {
-        this.LIST = new Root()
-    }
-    insert(node) {
-        this.LIST = new Node(this.LIST, node);
-    }
-    delete(node) {
-        if (this.LIST.NODE == node)
-            this.LIST = this.LIST.PARENT;
-        else
-            this.LIST.delete(node);
-
-    }
-    forEach(call) {
-        this.LIST.forEach(call)
-    }
-    every(call) {
-        return this.LIST.every(call)
-    }
-
+class QuickMapV2 {
+ constructor() {
+   this.CHILD = new Root()
+   this.ARRAY = [];
+ }
+  set(id,node) {
+    var n = new ListNode(this.CHILD,this,node,id)
+    this.CHILD.PARENT = n;
+    this.CHILD = n;
+    this.ARRAY[id] = n;
+    return n;
+  }
+  delete(id) {
+    this.ARRAY[id].destroy();
+   this.ARRAY[id] = null;
+  }
+  get(id) {
+     return this.ARRAY[id].NODE;
+  }
+  forEach(call) {
+    this.CHILD.forEach(call)
+  }
+  every(call) {
+    return this.CHILD.every(call)
+  }
 
 }
 class Holder {
     constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
-        this.PARENT.CHILDREN.push(this)
-        this.MAP = new LinkedList();
+         this.PARENT.CHILDREN.push(this)
+        this.MAP = new QuickMapV2();
         this.POWER = power;
         this.LVL = lvl
         this.LEN = 0;
@@ -117,16 +114,16 @@ class Holder {
 
     }
 
-    insert(node) {
+    set(id,node) {
 
-        this.MAP.insert(node)
+        this.MAP.set(id,node)
         this.add()
     }
     add() {
         ++this.LEN;
-        this.PARENT.add();
+            this.PARENT.add();
 
-
+        
     }
 
     every(bounds, call) {
@@ -142,9 +139,9 @@ class Holder {
         }
         return true;
     }
-    forEach(bounds, call) {
+         forEach(bounds, call) {
         if (!this.LEN) return;
-        this.MAP.forEach(call)
+           this.MAP.forEach(call)
         if (this.CHILDREN[0]) {
             for (var i = 0; i < this.CHILDREN.length; ++i) {
                 if (this.checkIntersect(bounds, this.CHILDREN[i].BOUNDS)) {
@@ -157,13 +154,13 @@ class Holder {
     }
     sub() {
         --this.LEN;
-        this.PARENT.sub();
+            this.PARENT.sub();
     }
-    delete(node) {
-        this.MAP.delete(node)
+    delete(id) {
+        this.MAP.delete(id)
         this.sub()
     }
-
+   
 
 }
 class Grid {
@@ -190,14 +187,9 @@ class Grid {
                 var key = this._getKey(x, i);
 
 
-                if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)];
-                else
-                    var l = {
-                        CHILDREN: [],
-                        add: function () {},
-                        sub: function () {}
-                    }
-
+          if (this.PREV) var l = this.PREV.DATA[this._getKey(bx, by)]; else
+                  var l = {CHILDREN: [],add: function() {},sub: function() {}}
+               
                 this.DATA[key] = new Holder(l, j, i, this.POWER, this.LVL);
 
             }
@@ -255,22 +247,22 @@ class Grid {
         node.hash.k1 = k1
         node.hash.k2 = k2
         node.hash.level = this.LEVEL;
-
+ 
         for (var j = k1.x; j <= k2.x; ++j) {
             var x = j << 16;
             for (var i = k1.y; i <= k2.y; ++i) {
 
                 var ke = this._getKey(x, i);
-
+       
                 // console.log(ke)
-                this.DATA[ke].insert(node)
+                this.DATA[ke].set(id,node)
             }
 
         }
         return true;
     }
-    delete(node) {
-        var k1 = node.hash.k1
+    delete(node) {  
+         var k1 = node.hash.k1
         var k2 = node.hash.k2
         var lenX = k2.x + 1,
             lenY = k2.y + 1;
@@ -281,7 +273,7 @@ class Grid {
 
                 var ke = this._getKey(x, i);
 
-                this.DATA[ke].delete(node)
+                this.DATA[ke].delete(id)
             }
 
         }
@@ -295,7 +287,7 @@ class Grid {
                 if (hsh[obj._HashID]) return;
                 hsh[obj._HashID] = true;
                 array.push(obj);
-
+              
             })
             return true;
         })
@@ -323,13 +315,12 @@ class Grid {
                 if (hsh[obj._HashID]) return;
                 hsh[obj._HashID] = true;
                 call(obj);
-
+            
             })
             return true;
         })
     }
 }
-
 window.HashBounds = class HashBounds {
     constructor(power, lvl, max, minc) {
         this.INITIAL = power;
