@@ -4,7 +4,7 @@ No license here!
 
 */
 
-class Root() {
+class Root {
  constructor() {
    
  }
