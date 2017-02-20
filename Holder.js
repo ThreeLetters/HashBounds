@@ -13,12 +13,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-var LinkedList = require('./LinkedList.js')
+var QuickMapV2 = require('./QuickMapV2.js')
 module.exports = class Holder {
     constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
          this.PARENT.CHILDREN.push(this)
-        this.MAP = new LinkedList();
+        this.MAP = new QuickMapV2();
         this.POWER = power;
         this.LVL = lvl
         this.LEN = 0;
@@ -52,9 +52,9 @@ module.exports = class Holder {
 
     }
 
-    insert(node) {
+    set(id,node) {
 
-        this.MAP.insert(node)
+        this.MAP.set(id,node)
         this.add()
     }
     add() {
@@ -94,8 +94,8 @@ module.exports = class Holder {
         --this.LEN;
             this.PARENT.sub();
     }
-    delete(node) {
-        this.MAP.delete(node)
+    delete(id) {
+        this.MAP.delete(id)
         this.sub()
     }
    
