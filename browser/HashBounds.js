@@ -255,7 +255,7 @@ class Grid {
                 var ke = this._getKey(x, i);
        
                 // console.log(ke)
-                this.DATA[ke].set(id,node)
+                this.DATA[ke].set(node._HashID,node)
             }
 
         }
@@ -273,7 +273,7 @@ class Grid {
 
                 var ke = this._getKey(x, i);
 
-                this.DATA[ke].delete(id)
+                this.DATA[ke].delete(node._HashID)
             }
 
         }
