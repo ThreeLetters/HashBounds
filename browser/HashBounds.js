@@ -36,7 +36,7 @@ class ListNode {
  }
  destroy() {
   this.PARENT.CHILD = this.CHILD;
-   this.CHILD.PARENT = PARENT;
+   this.CHILD.PARENT = this.PARENT;
  }
   forEach(call) {
     call(this.NODE,this.ID);
