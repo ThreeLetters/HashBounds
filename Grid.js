@@ -109,7 +109,7 @@ module.exports = class Grid {
                 var ke = this._getKey(x, i);
        
                 // console.log(ke)
-                this.DATA[ke].insert(node)
+                this.DATA[ke].set(id,node)
             }
 
         }
@@ -127,7 +127,7 @@ module.exports = class Grid {
 
                 var ke = this._getKey(x, i);
 
-                this.DATA[ke].delete(node)
+                this.DATA[ke].delete(id)
             }
 
         }
