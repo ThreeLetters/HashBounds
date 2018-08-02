@@ -182,6 +182,9 @@ class Grid {
         this.POWER = g;
         this.LEVEL = p;
         this.PREV = prev;
+        this.NEXT = false;
+
+        if (this.PREV) this.PREV.NEXT = this;
         this.SIZEX = sizeX;
         this.SIZEY = sizeY;
         this.DATA = {};
@@ -190,7 +193,7 @@ class Grid {
 
     init() {
         for (var j = 0; j < this.SIZEX; ++j) {
-            var x = j * this.SIZE;
+            var x = j * this.SIZEY;
             if (this.PREV) var bx = Math.floor(j / 2) * this.PREV.SIZE;
             for (var i = 0; i < this.SIZEY; ++i) {
 
@@ -232,7 +235,7 @@ class Grid {
 
         for (var j = k1.x; j <= k2.x; ++j) {
 
-            var x = j * this.SIZE;
+            var x = j * this.SIZEY;
 
             for (var i = k1.y; i <= k2.y; ++i) {
 
@@ -261,10 +264,13 @@ class Grid {
         node.hash.level = this.LEVEL;
 
         for (var j = k1.x; j <= k2.x; ++j) {
-            var x = j * this.SIZE;
+            var x = j * this.SIZEY;
             for (var i = k1.y; i <= k2.y; ++i) {
                 var ke = x + i;
                 // console.log(ke)
+                if (!this.DATA[ke]) {
+
+                }
                 this.DATA[ke].set(node)
             }
         }
@@ -276,7 +282,7 @@ class Grid {
         var lenX = k2.x,
             lenY = k2.y;
         for (var j = k1.x; j <= lenX; ++j) {
-            var x = j * this.SIZE;
+            var x = j * this.SIZEY;
             for (var i = k1.y; i <= lenY; ++i) {
 
 
@@ -456,7 +462,7 @@ class HashBounds {
         }
     }
     convertBounds(bounds) { // convert for our purposes
-       if (bounds.TYPE === undefined) {
+        if (bounds.TYPE === undefined) {
             if (bounds.x !== undefined) {
                 this.psToMM(bounds);
                 bounds.TYPE = 1;
