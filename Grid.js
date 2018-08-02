@@ -35,7 +35,7 @@ module.exports = class Grid {
     init() {
         for (var j = 0; j < this.SIZEX; ++j) {
             var x = j * this.SIZEY;
-            if (this.PREV) var bx = Math.floor(j / 2) * this.PREV.SIZE;
+            if (this.PREV) var bx = Math.floor(j / 2) * this.PREV.SIZEX;
             for (var i = 0; i < this.SIZEY; ++i) {
 
                 var by = i >> 1;
