@@ -148,19 +148,18 @@ module.exports = class HashBounds {
         }
     }
     convertBounds(bounds) { // convert for our purposes
-        if (bounds.TYPE === 1) {
-            this.psToMM(bounds);
-        } else if (bounds.TYPE === 2) {
-            this.mmToPs(bounds);
-        } else if (bounds.TYPE === undefined) {
+        if (bounds.TYPE === undefined) {
             if (bounds.x !== undefined) {
                 this.psToMM(bounds);
                 bounds.TYPE = 1;
             } else {
-                this.mmToPs(bounds);
+                this.mmToPS(bounds);
                 bounds.TYPE = 2;
             }
-
+        } else if (bounds.TYPE === 1) {
+            this.psToMM(bounds);
+        } else if (bounds.TYPE === 2) {
+            this.mmToPS(bounds);
         }
     }
 }
