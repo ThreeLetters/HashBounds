@@ -268,9 +268,7 @@ class Grid {
             for (var i = k1.y; i <= k2.y; ++i) {
                 var ke = x + i;
                 // console.log(ke)
-                if (!this.DATA[ke]) {
 
-                }
                 this.DATA[ke].set(node)
             }
         }
