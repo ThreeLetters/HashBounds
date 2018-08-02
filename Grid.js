@@ -19,21 +19,21 @@
 
 var Holder = require('./Holder.js')
 module.exports = class Grid {
-    constructor(g, p, size, prev) {
+    constructor(g, p, sizeX, sizeY, prev) {
         this.POWER = g;
         this.LEVEL = p;
         this.PREV = prev;
-        this.SIZE = size;
-
+        this.SIZEX = sizeX;
+        this.SIZEY = sizeY;
         this.DATA = {};
         this.init()
     }
 
     init() {
-        for (var j = 0; j < this.SIZE; ++j) {
+        for (var j = 0; j < this.SIZEX; ++j) {
             var x = j * this.SIZE;
             if (this.PREV) var bx = Math.floor(j / 2) * this.PREV.SIZE;
-            for (var i = 0; i < this.SIZE; ++i) {
+            for (var i = 0; i < this.SIZEY; ++i) {
 
                 var by = i >> 1;
                 var key = x + i;

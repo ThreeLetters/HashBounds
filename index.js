@@ -19,10 +19,11 @@
 
 var Grid = require('./Grid.js');
 module.exports = class HashBounds {
-    constructor(power, lvl, max) {
+    constructor(power, lvl, maxX, maxY) {
         this.INITIAL = power;
         this.LVL = lvl;
-        this.MAX = max;
+        this.MAXX = maxX;
+        this.MAXY = maxY || maxX;
         this.MIN = power;
         this.LEVELS = []
         this.lastid = 0;
@@ -45,7 +46,7 @@ module.exports = class HashBounds {
         for (var i = this.LVL - 1; i >= 0; --i) {
             var a = this.INITIAL + i;
             var b = 1 << a;
-            var grid = new Grid(a, i, Math.ceil(this.MAX / b), last)
+            var grid = new Grid(a, i, Math.ceil(this.MAXX / b), Math.ceil(this.MAXY / b), last)
             if (!this.BASE) this.BASE = grid;
             this.LEVELS[i] = grid;
             last = grid;
@@ -118,6 +119,34 @@ module.exports = class HashBounds {
         bounds.maxX = bounds.x + bounds.width;
         bounds.maxY = bounds.y + bounds.height;
     }
+
+    checkBoundsMax(bounds) { // check if bounds exceeds max size
+        this.convertBounds(bounds);
+        return (bounds.maxX < this.MAXX && bounds.maxY < this.MAXY)
+    }
+    truncateBounds(bounds) {
+        if (bounds.TYPE === 1) {
+
+            bounds.x = Math.min(bounds.x, this.MAXX);
+            bounds.y = Math.min(bounds.y, this.MAXX);
+
+            if (bounds.x + bounds.width > this.MAXX) {
+                bounds.width = this.MAXX - bounds.x;
+            }
+            if (bounds.y + bounds.height > this.MAXY) {
+                bounds.height = this.MAXY - bounds.y;
+            }
+
+
+        } else if (bounds.TYPE === 2) {
+            bounds.minX = Math.min(bounds.minX, this.MAXX);
+            bounds.minY = Math.min(bounds.minY, this.MAXY);
+            bounds.maxX = Math.min(bounds.maxX, this.MAXX);
+            bounds.maxY = Math.min(bounds.maxY, this.MAXY);
+        } else {
+            throw "ERR: Bound not formatted! Please make sure bounds were put through the convertBounds function";
+        }
+    }
     convertBounds(bounds) { // convert for our purposes
         if (bounds.TYPE === undefined) {
             if (bounds.x !== undefined) {
@@ -127,7 +156,6 @@ module.exports = class HashBounds {
                 this.mmToPS(bounds);
                 bounds.TYPE = 2;
             }
-
         } else if (bounds.TYPE === 1) {
             this.psToMM(bounds);
         } else if (bounds.TYPE === 2) {
