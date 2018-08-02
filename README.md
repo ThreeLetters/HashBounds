@@ -10,7 +10,10 @@ A super efficient collision check reducer. Also a good snack made out of potato 
 # Usage
 > npm install hashbounds
 
-##### Hashbounds(basecellsize,lvls,preloadX,preloadY)
+##### Hashbounds(baseCellSize,lvls,preloadX,preloadY)
+* baseCellSize - Size of the largest cells (In squares of 2).
+* lvls - Number of levels of sizes to go down. (EG: if baseCellSize is 4, and lvls is 1, the smallest cell will be size 3)
+* preloadX/preloadY - OPTIONAL: Preloads by creating buckets at initialization
 
 ```js
 var HashBounds = require('hashbounds')
