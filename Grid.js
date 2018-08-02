@@ -33,16 +33,17 @@ module.exports = class Grid {
     }
 
     init() {
+
         for (var j = 0; j < this.SIZEX; ++j) {
-            var x = j * this.SIZEY;
-            if (this.PREV) var bx = Math.floor(j / 2) * this.PREV.SIZEY;
+            var x = (j + 32767) << 16
+            if (this.PREV) var bx = ((j >> 1) + 32767) << 16;
             for (var i = 0; i < this.SIZEY; ++i) {
 
                 var by = i >> 1;
-                var key = x + i;
+                var key = x | (i + 32767);
 
 
-                if (this.PREV) var l = this.PREV.DATA[bx + by];
+                if (this.PREV) var l = this.PREV.DATA[bx | (by + 32767)];
                 else
                     var l = {
                         CHILDREN: [],
@@ -54,7 +55,33 @@ module.exports = class Grid {
             }
         }
     }
+    createAt(x, y) {
+        var kx = (x + 32767) << 16;
+        var ky = y + 32767;
 
+        if (this.PREV) {
+            var bx = ((x >> 1) + 32767) << 16;
+            var by = y >> 1;
+
+            var l = this.PREV.DATA[bx | (by + 32767)];
+        } else
+            var l = {
+                CHILDREN: [],
+                add: function () {},
+                sub: function () {}
+            }
+
+        this.DATA[kx | ky] = new Holder(l, x, y, this.POWER, this.LEVEL);
+
+        if (this.NEXT) {
+            var dx = x << 1,
+                dy = y << 1
+            this.NEXT.createAt(dx, dy)
+            this.NEXT.createAt(dx, dy + 1)
+            this.NEXT.createAt(dx + 1, dy)
+            this.NEXT.createAt(dx + 1, dy + 1)
+        }
+    }
     getKey(x, y) {
         return {
             x: x >> this.POWER,
@@ -76,12 +103,12 @@ module.exports = class Grid {
 
         for (var j = k1.x; j <= k2.x; ++j) {
 
-            var x = j * this.SIZEY;
+            var x = (j + 32767) << 16;
 
             for (var i = k1.y; i <= k2.y; ++i) {
 
 
-                var key = x + i;
+                var key = x | (i + 32767);
                 if (this.DATA[key]) {
                     if (!call(this.DATA[key])) return false
                 }
@@ -90,6 +117,22 @@ module.exports = class Grid {
         }
         return true;
     }
+    sendCreateAt(x, y) {
+
+        var X = x << this.POWER,
+            Y = y << this.POWER;
+
+        var root = this;
+
+        while (root.PREV) {
+            root = root.PREV;
+        }
+        // console.log("CREATING:")
+        root.createAt(X >> root.POWER, Y >> root.POWER)
+
+
+    }
+
 
     insert(node, bounds) {
 
@@ -105,10 +148,11 @@ module.exports = class Grid {
         node.hash.level = this.LEVEL;
 
         for (var j = k1.x; j <= k2.x; ++j) {
-            var x = j * this.SIZEY;
+            var x = (j + 32767) << 16;
             for (var i = k1.y; i <= k2.y; ++i) {
-                var ke = x + i;
+                var ke = x | (i + 32767);
                 // console.log(ke)
+                if (!this.DATA[ke]) this.sendCreateAt(j, i);
 
                 this.DATA[ke].set(node)
             }
@@ -121,11 +165,11 @@ module.exports = class Grid {
         var lenX = k2.x,
             lenY = k2.y;
         for (var j = k1.x; j <= lenX; ++j) {
-            var x = j * this.SIZEY;
+            var x = (j + 32767) << 16;
             for (var i = k1.y; i <= lenY; ++i) {
 
 
-                var ke = x + i;
+                var ke = x | (i + 32767);
 
                 this.DATA[ke].delete(node)
             }

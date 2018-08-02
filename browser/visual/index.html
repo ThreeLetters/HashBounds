@@ -46,7 +46,7 @@
         (function(w, M) {
             var config = {
                 numberOfObjects: 200,
-                sizePowerOfTwo: 4,
+                sizePowerOfTwo: 5,
                 levels: 3,
                 minSize: 1,
                 maxSize: 25,
@@ -128,6 +128,7 @@
                 width: config.searchSize,
                 height: config.searchSize
             };
+            window.box = myHero;
 
 
             /*
@@ -186,19 +187,19 @@
                 var r = 0,
                     g = 255,
                     b = 0,
-                    step = (255 / tree.LVL);
+                    step = (255 / tree.LVL - 1);
 
-                for (var i = 0; i < tree.LVL; i++) {
+                var current = tree.BASE;
+                while (current) {
 
 
-
+                    drawGrid(ctx, tree.MAXX, tree.MAXY, 1 << current.POWER, "rgba(" + (r >> 0) + "," + (g >> 0) + ",0,0.1)")
                     r += step
                     g -= step
-                    drawGrid(ctx, tree.MAX, tree.MAX, Math.pow(2, tree.INITIAL + i + 1), "rgba(" + (r >> 0) + "," + (g >> 0) + ",0,0.1)")
-
-
+                    current = current.NEXT;
 
                 }
+
 
 
             };
@@ -284,7 +285,7 @@
             var loop = function() {
                 updateDatGui();
 
-                var returnObjects = [];
+                window.returnObjects = [];
 
                 //clear the tree
 
@@ -293,8 +294,8 @@
                 //update myObjects and insert them into the tree again
                 for (var i = 0; i < myObjects.length; i = i + 1) {
 
-                    myObjects[i].bounds.x += myObjects[i].vx;
-                    myObjects[i].bounds.y += myObjects[i].vy;
+                    // myObjects[i].bounds.x += myObjects[i].vx;
+                    //myObjects[i].bounds.y += myObjects[i].vy;
                     myObjects[i].check = false;
 
                     if (myObjects[i].bounds.x > 400) myObjects[i].bounds.x = 0;
@@ -312,9 +313,11 @@
                 ctx.strokeRect(myHero.x, myHero.y, myHero.width, myHero.height);
 
                 //retrieve all objects in the bounds of the hero 
-                returnObjects = myTree.forEach(myHero, function(obj) {
+                myTree.forEach(myHero, function(obj) {
+                    window.returnObjects.push(obj)
                     obj.check = true;
                 });
+
 
                 //flag retrieved objects
 

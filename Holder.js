@@ -30,6 +30,12 @@ module.exports = class Holder {
             width: 1 << power,
             height: 1 << power
         }
+
+        this.BOUNDS.minX = this.BOUNDS.x
+        this.BOUNDS.minY = this.BOUNDS.y
+        this.BOUNDS.maxX = this.BOUNDS.x + this.BOUNDS.width;
+        this.BOUNDS.maxY = this.BOUNDS.y + this.BOUNDS.height;
+
         this.CHILDREN = []
     }
     checkIntersect(r1, r2) {
@@ -63,7 +69,7 @@ module.exports = class Holder {
         if (!this.CHILDREN[0]) return -2;
 
         var minX = bounds.minX,
-            minY = bounds.minX,
+            minY = bounds.minY,
             maxX = bounds.maxX,
             maxY = bounds.maxY,
             minX2 = bounds2.minX,
@@ -122,15 +128,14 @@ module.exports = class Holder {
 
         this.MAP.forEach(call)
 
-        if (quads === -2) return
+        if (quads === -2) {
+            return
+        }
 
         for (var i = 0, l = quads.length; i < l; i++) {
             var child = this.CHILDREN[quads[i]];
             if (child) child.forEach(bounds, call)
         }
-
-
-        return;
     }
     every(bounds, call) {
         if (!this.LEN) return true;
