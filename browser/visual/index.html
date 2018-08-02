@@ -294,8 +294,8 @@
                 //update myObjects and insert them into the tree again
                 for (var i = 0; i < myObjects.length; i = i + 1) {
 
-                    // myObjects[i].bounds.x += myObjects[i].vx;
-                    //myObjects[i].bounds.y += myObjects[i].vy;
+                    myObjects[i].bounds.x += myObjects[i].vx;
+                    myObjects[i].bounds.y += myObjects[i].vy;
                     myObjects[i].check = false;
 
                     if (myObjects[i].bounds.x > 400) myObjects[i].bounds.x = 0;
