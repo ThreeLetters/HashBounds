@@ -93,6 +93,14 @@ module.exports = class Grid {
 
     }
     _get(bounds, call) {
+        if (!bounds) {
+            for (var key in this.DATA) {
+                if (this.DATA[key]) {
+                    if (!call(this.DATA[key])) return false
+                }
+            }
+            return true;
+        }
         var x1 = bounds.minX,
             y1 = bounds.minY,
             x2 = bounds.maxX,
@@ -132,7 +140,17 @@ module.exports = class Grid {
 
 
     }
+    checkChange(node, bounds) {
+        var x1 = bounds.minX,
+            y1 = bounds.minY,
+            x2 = bounds.maxX,
+            y2 = bounds.maxY;
 
+        var k1 = this.getKey(x1, y1)
+        var k2 = this.getKey(x2, y2)
+
+        return node.hash.k1.x != k1.x || node.hash.k1.y != k1.y || node.hash.k2.x != k2.x || node.hash.k2.y != k2.y
+    }
 
     insert(node, bounds) {
 

@@ -122,7 +122,7 @@ class Holder {
     }
     forEach(bounds, call) {
         if (!this.LEN) return;
-
+        if (!bounds) return this.forEachAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
 
@@ -141,6 +141,7 @@ class Holder {
     }
     every(bounds, call) {
         if (!this.LEN) return true;
+        if (!bounds) return this.everyAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
 
@@ -153,7 +154,7 @@ class Holder {
         return quads.every((q) => {
             var child = this.CHILDREN[q];
             if (!child) return true;
-            return this.CHILDREN[i].every(bounds, call)
+            return child.every(bounds, call)
         })
     }
     everyAll(call) {
@@ -257,6 +258,14 @@ class Grid {
 
     }
     _get(bounds, call) {
+        if (!bounds) {
+            for (var key in this.DATA) {
+                if (this.DATA[key]) {
+                    if (!call(this.DATA[key])) return false
+                }
+            }
+            return true;
+        }
         var x1 = bounds.minX,
             y1 = bounds.minY,
             x2 = bounds.maxX,
@@ -296,7 +305,17 @@ class Grid {
 
 
     }
+    checkChange(node, bounds) {
+        var x1 = bounds.minX,
+            y1 = bounds.minY,
+            x2 = bounds.maxX,
+            y2 = bounds.maxY;
 
+        var k1 = this.getKey(x1, y1)
+        var k2 = this.getKey(x2, y2)
+
+        return node.hash.k1.x != k1.x || node.hash.k1.y != k1.y || node.hash.k2.x != k2.x || node.hash.k2.y != k2.y
+    }
 
     insert(node, bounds) {
 
@@ -417,8 +436,35 @@ class HashBounds {
         this.createLevels();
     }
     update(node, bounds) {
-        this.delete(node)
-        this.insert(node, bounds)
+
+        if (node._HashParent !== this.ID) {
+            return this.insert(node, bounds)
+        }
+        this.convertBounds(bounds);
+        var prev = node._HashIndex
+        var level = this.getLevel(node, bounds);
+
+        if (prev != level || this.LEVELS[level].checkChange(node, bounds)) {
+            this.LEVELS[prev].delete(node)
+            this.LEVELS[level].insert(node, bounds);
+            return true;
+        } else {
+            return false;
+        }
+    }
+    getLevel(node, bounds) {
+        if (node._HashSizeX === bounds.width && node._HashSizeY === bounds.height) {
+            return node._HashIndex;
+        }
+
+        var index = this.log2[(Math.max(bounds.width, bounds.height) >> this.MIN)]
+        if (index === undefined) index = this.LVL - 1;
+
+        node._HashIndex = index;
+        node._HashSizeX = bounds.width;
+        node._HashSizeY = bounds.height;
+
+        return index;
     }
     insert(node, bounds) {
         if (node._HashParent === this.ID) throw "ERR: A node cannot be already in this hash!"; // check if it already is inserted
@@ -430,20 +476,7 @@ class HashBounds {
             node.hash = {}
             node._HashParent = this.ID;
         }
-
-        if (node._HashSizeX === bounds.width && node._HashSizeY === bounds.height) {
-            this.LEVELS[node._HashIndex].insert(node, bounds);
-            return;
-        }
-
-        var index = this.log2[(Math.max(bounds.width, bounds.height) >> this.MIN)]
-        if (index === undefined) index = this.LVL - 1;
-
-        node._HashIndex = index;
-        node._HashSizeX = bounds.width;
-        node._HashSizeY = bounds.height;
-
-        this.LEVELS[index].insert(node, bounds);
+        this.LEVELS[this.getLevel(node, bounds)].insert(node, bounds);
     }
 
     delete(node) {
@@ -452,17 +485,26 @@ class HashBounds {
         node._HashParent = 0;
     }
     toArray(bounds) {
-        this.convertBounds(bounds);
+        if (bounds)
+            this.convertBounds(bounds);
 
         return this.BASE.toArray(bounds);
     }
     every(bounds, call) {
-        this.convertBounds(bounds);
+        if (!call) {
+            call = bounds;
+            bounds = false;
+        } else
+            this.convertBounds(bounds);
 
         return this.BASE.every(bounds, call);
     }
     forEach(bounds, call) {
-        this.convertBounds(bounds);
+        if (!call) {
+            call = bounds;
+            bounds = false;
+        } else
+            this.convertBounds(bounds);
 
         this.BASE.forEach(bounds, call)
     }
@@ -470,7 +512,7 @@ class HashBounds {
         bounds.x = bounds.minX;
         bounds.y = bounds.minY;
         bounds.width = bounds.maxX - bounds.minX;
-        bounds.height = bottom.maxY - bounds.minY;
+        bounds.height = bounds.maxY - bounds.minY;
     }
     psToMM(bounds) { // pos-size to min-max
 

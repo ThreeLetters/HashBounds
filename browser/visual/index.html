@@ -27,7 +27,6 @@
             margin: 0 auto;
             background: #000;
         }
-
     </style>
 </head>
 
@@ -41,9 +40,13 @@
 
     <script src="../HashBounds.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+    <script type="text/javascript" src="stats.js"></script>
 
     <script>
         (function(w, M) {
+            var stats = new Stats();
+
+            stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
             var config = {
                 numberOfObjects: 200,
                 sizePowerOfTwo: 5,
@@ -70,6 +73,7 @@
             });
             var container = document.getElementById('controllerContainer');
             container.appendChild(gui.domElement);
+            container.appendChild(stats.dom)
             gui.add(config, "numberOfObjects", 1, 50000).step(1);
             gui.add(config, "sizePowerOfTwo", 1, 15).step(1);
             gui.add(config, "levels", 1, 15).step(1);
@@ -135,7 +139,8 @@
              * create some objects and save them in myObjects
              */
             var createObjects = function() {
-                myObjects.length = 0;
+                myTree.clear()
+                myObjects = [];
                 for (var i = 0; i < config.numberOfObjects; i = i + 1) {
                     myObjects.push({
                         bounds: {
@@ -218,10 +223,12 @@
 
                     obj = objects[i];
 
-                    if (obj.check) {
+                    if (obj.check == 2) {
                         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-                    } else {
+                    } else if (!obj.check) {
                         ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                    } else if (obj.check == 1) {
+                        ctx.strokeStyle = 'rgba(200,255,255,0.4)';
                     }
 
                     ctx.strokeRect(obj.bounds.x, obj.bounds.y, obj.bounds.width, obj.bounds.height);
@@ -258,7 +265,6 @@
             function updateDatGui() {
                 if (lastConfig.numberOfObjects !== config.numberOfObjects) {
                     createObjects();
-                    createObjects();
                 }
 
                 if (lastConfig.sizePowerOfTwo !== config.sizePowerOfTwo) {
@@ -292,11 +298,12 @@
                 ctx.clearRect(0, 0, 400, 300);
 
                 //update myObjects and insert them into the tree again
+                stats.begin();
                 for (var i = 0; i < myObjects.length; i = i + 1) {
 
                     myObjects[i].bounds.x += myObjects[i].vx;
                     myObjects[i].bounds.y += myObjects[i].vy;
-                    myObjects[i].check = false;
+                    myObjects[i].check = 0;
 
                     if (myObjects[i].bounds.x > 400) myObjects[i].bounds.x = 0;
                     if (myObjects[i].bounds.x < 0) myObjects[i].bounds.x = 400;
@@ -306,6 +313,18 @@
 
                     if (myObjects[i].hash) myTree.update(myObjects[i], myObjects[i].bounds);
                     else myTree.insert(myObjects[i], myObjects[i].bounds)
+
+
+                    if (!myTree.every(myObjects[i].bounds, (obj) => {
+                            if (obj == myObjects[i]) return true;
+
+                            var orig = myObjects[i].bounds;
+                            obj = obj.bounds;
+                            //if (i == 0) console.log(myObjects[i].bounds, obj.bounds)
+                            return obj.x > orig.maxX || obj.y > orig.maxY || obj.maxX < orig.x || obj.maxY < orig.y
+                        })) {
+                        myObjects[i].check = 1;
+                    }
                 }
 
                 //draw hero
@@ -315,10 +334,10 @@
                 //retrieve all objects in the bounds of the hero 
                 myTree.forEach(myHero, function(obj) {
                     window.returnObjects.push(obj)
-                    obj.check = true;
+                    obj.check = 2;
                 });
 
-
+                stats.end();
                 //flag retrieved objects
 
 
@@ -329,6 +348,7 @@
                 drawObjects(myTree);
 
                 requestAnimFrame(loop);
+
             };
 
             //create objects
@@ -344,10 +364,9 @@
             w.myTree = myTree;
 
         })(window, Math);
-
     </script>
     <br>
-    <h4>Hashbounds allow you to optimise collision detection. It is hightly efficient and is hierarchical. This means it is more efficient than a Quadtree or a regular spatial hash. The green lines in this demo represent the smallest divisions, and the red as the biggest divisions </h4>
+    <h4>Hashbounds allow you to optimise collision detection. It is hightly efficient and is hierarchical. This means it is more efficient than a Quadtree or a regular spatial hash. </h4>
 </body>
 
 </html>

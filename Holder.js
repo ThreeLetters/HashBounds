@@ -120,7 +120,7 @@ module.exports = class Holder {
     }
     forEach(bounds, call) {
         if (!this.LEN) return;
-
+        if (!bounds) return this.forEachAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
 
@@ -139,6 +139,7 @@ module.exports = class Holder {
     }
     every(bounds, call) {
         if (!this.LEN) return true;
+        if (!bounds) return this.everyAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
 
@@ -151,7 +152,7 @@ module.exports = class Holder {
         return quads.every((q) => {
             var child = this.CHILDREN[q];
             if (!child) return true;
-            return this.CHILDREN[i].every(bounds, call)
+            return child.every(bounds, call)
         })
     }
     everyAll(call) {
