@@ -87,3 +87,9 @@ var bounds = {
 5. toArray(bounds): Get an array of objects in certain bounds
 6. forEach(bounds,call): Loop through objects in certain bounds
 7. every(bounds,call): Same as .forEach(bounds), but stops execution when returning false
+
+## HashBounds vs QuadTree comparison:
+
+![screen shot 2018-08-06 at 5 55 48 pm](https://user-images.githubusercontent.com/13282284/43742985-0adeaa32-99a2-11e8-9530-8aff1813ec44.png)
+![screen shot 2018-08-06 at 5 56 04 pm](https://user-images.githubusercontent.com/13282284/43742986-0aebe224-99a2-11e8-81a1-dacd18aeeb4d.png)
+
