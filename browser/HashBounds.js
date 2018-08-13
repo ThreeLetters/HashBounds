@@ -12,7 +12,8 @@
 class Holder {
     constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
-        this.PARENT.CHILDREN.push(this)
+        this.CHILDINDEX = 0;
+        if (this.PARENT != null) this.PARENT.CHILDREN[this.PARENT.CHILDINDEX++] = this
         this.MAP = [];
         this.POWER = power;
         this.LVL = lvl
@@ -31,12 +32,12 @@ class Holder {
         this.BOUNDS.maxX = this.BOUNDS.x + this.BOUNDS.width;
         this.BOUNDS.maxY = this.BOUNDS.y + this.BOUNDS.height;
 
-        this.CHILDREN = []
+        this.CHILDREN = [];
     }
 
     add() {
         ++this.LEN;
-        this.PARENT.add();
+        if (this.PARENT != null) this.PARENT.add();
     }
 
     checkIntersect(r1, r2) {
@@ -48,7 +49,7 @@ class Holder {
     }
 
     getQuad(bounds, bounds2) {
-        if (!this.CHILDREN[0]) return -2;
+        if (this.CHILDINDEX === 0) return -2;
 
         var minX = bounds.minX,
             minY = bounds.minY,
@@ -69,37 +70,41 @@ class Holder {
 
 
         if (top) {
-            if (left) return [0];
-            else if (right) return [2];
-            return [0, 2];
+            if (left) return [this.CHILDREN[0]];
+            else if (right) return [this.CHILDREN[2]];
+            return [this.CHILDREN[0], this.CHILDREN[2]];
         } else if (bottom) {
-            if (left) return [1];
-            else if (right) return [3];
-            return [1, 3];
+            if (left) return [this.CHILDREN[1]];
+            else if (right) return [this.CHILDREN[3]];
+            return [this.CHILDREN[1], this.CHILDREN[3]];
         }
 
         if (left) {
-            return [0, 1];
+            return [this.CHILDREN[0], this.CHILDREN[1]];
         } else if (right) {
-            return [2, 3];
+            return [this.CHILDREN[2], this.CHILDREN[3]];
         }
 
-        if (bounds.width < bounds2.width || bounds.height < bounds2.height) return [0, 1, 2, 3];
+        if (bounds.width < bounds2.width || bounds.height < bounds2.height || minX > minX2 || maxX < maxX2 || minY > minY2 || maxY < maxY2) {
+
+            return [this.CHILDREN[0], this.CHILDREN[1], this.CHILDREN[2], this.CHILDREN[3]];
+        }
         return -1; // too big
     }
 
     forEachAll(call) {
-        if (!this.LEN) return;
+        if (this.LEN === 0) return;
         this.MAP.forEach(call)
 
-        for (var i = 0; i < this.CHILDREN.length; ++i) {
-            this.CHILDREN[i].forEachAll(call)
+        if (this.CHILDINDEX !== 0) {
+            for (var i = 0; i < 4; ++i) {
+                this.CHILDREN[i].forEachAll(call)
+            }
         }
-
 
     }
     forEach(bounds, call) {
-        if (!this.LEN) return;
+        if (this.LEN === 0) return;
         if (!bounds) return this.forEachAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
@@ -113,12 +118,11 @@ class Holder {
         }
 
         for (var i = 0, l = quads.length; i < l; i++) {
-            var child = this.CHILDREN[quads[i]];
-            if (child) child.forEach(bounds, call)
+            quads[i].forEach(bounds, call)
         }
     }
     every(bounds, call) {
-        if (!this.LEN) return true;
+        if (this.LEN === 0) return true;
         if (!bounds) return this.everyAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
@@ -130,23 +134,23 @@ class Holder {
         if (quads === -2) return true;
 
         return quads.every((q) => {
-            var child = this.CHILDREN[q];
-            if (!child) return true;
-            return child.every(bounds, call)
+            return q.every(bounds, call)
         })
     }
     everyAll(call) {
-        if (!this.LEN) return true;
+        if (this.LEN === 0) return true;
         if (!this.MAP.every(call)) return false;
-        for (var i = 0; i < this.CHILDREN.length; ++i) {
-            if (!this.CHILDREN[i].everyAll(call)) return false;
+        if (this.CHILDINDEX !== 0) {
+            for (var i = 0; i < 4; ++i) {
+                if (!this.CHILDREN[i].everyAll(call)) return false;
+            }
         }
         return true;
     }
 
     sub() {
         --this.LEN;
-        this.PARENT.sub();
+        if (this.PARENT != null) this.PARENT.sub();
     }
     delete(node) {
         var ind = this.MAP.indexOf(node)
@@ -166,7 +170,7 @@ class Grid {
         this.POWER = g;
         this.LEVEL = p;
         this.PREV = prev;
-        this.NEXT = undefined;
+        this.NEXT = null;
         this.QUERYID = 1;
         if (this.PREV) this.PREV.NEXT = this;
         this.SIZEX = sizeX;
@@ -191,15 +195,10 @@ class Grid {
 
                 var by = i >> 1;
                 var key = x | (i + 32767);
+                var l = null;
 
+                if (this.PREV !== null) l = this.PREV.DATA[bx | (by + 32767)];
 
-                if (this.PREV !== undefined) var l = this.PREV.DATA[bx | (by + 32767)];
-                else
-                    var l = {
-                        CHILDREN: [],
-                        add: function () {},
-                        sub: function () {}
-                    }
                 this.DATA[key] = new Holder(l, j, i, this.POWER, this.LEVEL);
 
             }
@@ -221,18 +220,13 @@ class Grid {
     createAt(x, y) {
         var kx = (x + 32767) << 16;
         var ky = y + 32767;
-
-        if (this.PREV !== undefined) {
+        var l = null;
+        if (this.PREV !== null) {
             var bx = ((x >> 1) + 32767) << 16;
             var by = y >> 1;
 
-            var l = this.PREV.DATA[bx | (by + 32767)];
-        } else
-            var l = {
-                CHILDREN: [],
-                add: function () {},
-                sub: function () {}
-            }
+            l = this.PREV.DATA[bx | (by + 32767)];
+        }
 
         this.DATA[kx | ky] = new Holder(l, x, y, this.POWER, this.LEVEL);
 
@@ -416,7 +410,7 @@ class HashBounds {
         for (var i = this.LVL - 1; i >= 0; --i) {
             var a = this.INITIAL + i;
             var b = 1 << a;
-            this.LEVELS[i] = new Grid(a, i, Math.ceil(this.MAXX / b), Math.ceil(this.MAXY / b), (i == this.LVL - 1) ? undefined : this.LEVELS[i + 1])
+            this.LEVELS[i] = new Grid(a, i, Math.ceil(this.MAXX / b), Math.ceil(this.MAXY / b), (i == this.LVL - 1) ? null : this.LEVELS[i + 1])
             if (i == this.LVL - 1) this.BASE = this.LEVELS[i];
         }
     }
@@ -490,7 +484,7 @@ class HashBounds {
     every(bounds, call) {
         if (!call) {
             call = bounds;
-            bounds = false;
+            bounds = null;
         } else
             this.convertBounds(bounds);
 
@@ -499,7 +493,7 @@ class HashBounds {
     forEach(bounds, call) {
         if (!call) {
             call = bounds;
-            bounds = false;
+            bounds = null;
         } else
             this.convertBounds(bounds);
 

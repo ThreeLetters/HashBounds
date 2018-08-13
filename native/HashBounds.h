@@ -140,24 +140,28 @@ class Holder {
            return _every(cb,QID);  
         }
         
-        int quadsarr[4];
+        Holder* quadsarr[4];
         int quads = getQuad(bounds, BOUNDS,quadsarr);
 
        
         if (quads == -1) return everyAll(cb,QID);
         if (!_every(cb,QID)) return false;
         for (int i = 0; i < quads; i++) {
-            if (!CHILDREN[quadsarr[i]]->every(bounds,cb,QID)) return false;
+            if (!quadsarr[i]->every(bounds,cb,QID)) return false;
         }
         return true;
     }
-    int getQuad(Bounds & bounds, Bounds & bounds2, int* out) {
+    int getQuad(Bounds & bounds, Bounds & bounds2, Holder** out) {
         //if (CHILDINDEX == 0) return [-2];
 
         int minX = bounds.X,
             minY = bounds.Y,
             maxX = bounds.X + bounds.WIDTH,
             maxY = bounds.Y + bounds.HEIGHT,
+            minX2 = bounds2.X,
+            minY2 = bounds2.Y,
+            maxX2 = bounds2.X + bounds2.WIDTH,
+            maxY2 = bounds2.Y + bounds2.HEIGHT,
             halfY = bounds2.Y + (bounds2.HEIGHT >> 1),
             halfX = bounds2.X + (bounds2.WIDTH >> 1);
 
@@ -171,51 +175,51 @@ class Holder {
         if (top) {
             if (left) {
                 //return {0};
-                out[0] = 0;
+                out[0] = CHILDREN[0];
                 return 1;
             } else if (right) {
                 //return {2};
-                out[0] = 2;
+                out[0] = CHILDREN[2];
                 return 1;
             } 
            // return {0, 2};
-           out[0] = 0;
-           out[1] = 2;
+           out[0] = CHILDREN[0];
+           out[1] = CHILDREN[2];
            return 2;
         } else if (bottom) {
             if (left) {
                // return {1};
-               out[0] = 1;
+               out[0] = CHILDREN[1];
                return 1;
             } else if (right) {
                // return {3};
-               out[0] = 3;
+               out[0] = CHILDREN[3];
                return 1;
             }
             //return {1, 3};
-            out[0] = 1;
-            out[1] = 3;
+            out[0] = CHILDREN[1];
+            out[1] = CHILDREN[3];
              return 2;
         }
 
         if (left) {
            // return {0, 1};
-            out[0] = 0;
-            out[1] = 1;
+            out[0] = CHILDREN[0];
+            out[1] = CHILDREN[1];
             return 2;
         } else if (right) {
            // return {2, 3};
-            out[0] = 2;
-            out[1] = 3;
+            out[0] = CHILDREN[2];
+            out[1] = CHILDREN[3];
             return 2;
         }
 
-        if (bounds.WIDTH < bounds2.WIDTH || bounds.HEIGHT < bounds2.HEIGHT) {
+        if (bounds.WIDTH < bounds2.WIDTH || bounds.HEIGHT < bounds2.HEIGHT || minX > minX2 || maxX < maxX2 || minY > minY2 || maxY < maxY2) {
           //  return [0, 1, 2, 3];
-            out[0] = 0;
-            out[1] = 1;
-            out[2] = 2;
-            out[3] = 3;
+            out[0] = CHILDREN[0];
+            out[1] = CHILDREN[1];
+            out[2] = CHILDREN[2];
+            out[3] = CHILDREN[3];
              return 4;
         }
         return -1; // too big

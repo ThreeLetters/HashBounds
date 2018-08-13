@@ -11,11 +11,11 @@
         "url": "git+https://github.com/AJS-development/HashBounds.git"
     },
     "keywords": [
-    "collisions",
-    "trees",
-    "hash",
-    "bounds"
-  ],
+        "collisions",
+        "trees",
+        "hash",
+        "bounds"
+    ],
     "author": "Andrews54757",
     "license": "AGPL-3.0",
     "bugs": {

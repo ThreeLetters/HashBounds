@@ -17,7 +17,8 @@
 module.exports = class Holder {
     constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
-        this.PARENT.CHILDREN.push(this)
+        this.CHILDINDEX = 0;
+        if (this.PARENT != null) this.PARENT.CHILDREN[this.PARENT.CHILDINDEX++] = this
         this.MAP = [];
         this.POWER = power;
         this.LVL = lvl
@@ -36,12 +37,12 @@ module.exports = class Holder {
         this.BOUNDS.maxX = this.BOUNDS.x + this.BOUNDS.width;
         this.BOUNDS.maxY = this.BOUNDS.y + this.BOUNDS.height;
 
-        this.CHILDREN = []
+        this.CHILDREN = [];
     }
 
     add() {
         ++this.LEN;
-        this.PARENT.add();
+        if (this.PARENT != null) this.PARENT.add();
     }
 
     checkIntersect(r1, r2) {
@@ -53,7 +54,7 @@ module.exports = class Holder {
     }
 
     getQuad(bounds, bounds2) {
-        if (!this.CHILDREN[0]) return -2;
+        if (this.CHILDINDEX === 0) return -2;
 
         var minX = bounds.minX,
             minY = bounds.minY,
@@ -74,37 +75,41 @@ module.exports = class Holder {
 
 
         if (top) {
-            if (left) return [0];
-            else if (right) return [2];
-            return [0, 2];
+            if (left) return [this.CHILDREN[0]];
+            else if (right) return [this.CHILDREN[2]];
+            return [this.CHILDREN[0], this.CHILDREN[2]];
         } else if (bottom) {
-            if (left) return [1];
-            else if (right) return [3];
-            return [1, 3];
+            if (left) return [this.CHILDREN[1]];
+            else if (right) return [this.CHILDREN[3]];
+            return [this.CHILDREN[1], this.CHILDREN[3]];
         }
 
         if (left) {
-            return [0, 1];
+            return [this.CHILDREN[0], this.CHILDREN[1]];
         } else if (right) {
-            return [2, 3];
+            return [this.CHILDREN[2], this.CHILDREN[3]];
         }
 
-        if (bounds.width < bounds2.width || bounds.height < bounds2.height) return [0, 1, 2, 3];
+        if (bounds.width < bounds2.width || bounds.height < bounds2.height || minX > minX2 || maxX < maxX2 || minY > minY2 || maxY < maxY2) {
+
+            return [this.CHILDREN[0], this.CHILDREN[1], this.CHILDREN[2], this.CHILDREN[3]];
+        }
         return -1; // too big
     }
 
     forEachAll(call) {
-        if (!this.LEN) return;
+        if (this.LEN === 0) return;
         this.MAP.forEach(call)
 
-        for (var i = 0; i < this.CHILDREN.length; ++i) {
-            this.CHILDREN[i].forEachAll(call)
+        if (this.CHILDINDEX !== 0) {
+            for (var i = 0; i < 4; ++i) {
+                this.CHILDREN[i].forEachAll(call)
+            }
         }
-
 
     }
     forEach(bounds, call) {
-        if (!this.LEN) return;
+        if (this.LEN === 0) return;
         if (!bounds) return this.forEachAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
@@ -118,12 +123,11 @@ module.exports = class Holder {
         }
 
         for (var i = 0, l = quads.length; i < l; i++) {
-            var child = this.CHILDREN[quads[i]];
-            if (child) child.forEach(bounds, call)
+            quads[i].forEach(bounds, call)
         }
     }
     every(bounds, call) {
-        if (!this.LEN) return true;
+        if (this.LEN === 0) return true;
         if (!bounds) return this.everyAll(call);
 
         var quads = this.getQuad(bounds, this.BOUNDS)
@@ -135,23 +139,23 @@ module.exports = class Holder {
         if (quads === -2) return true;
 
         return quads.every((q) => {
-            var child = this.CHILDREN[q];
-            if (!child) return true;
-            return child.every(bounds, call)
+            return q.every(bounds, call)
         })
     }
     everyAll(call) {
-        if (!this.LEN) return true;
+        if (this.LEN === 0) return true;
         if (!this.MAP.every(call)) return false;
-        for (var i = 0; i < this.CHILDREN.length; ++i) {
-            if (!this.CHILDREN[i].everyAll(call)) return false;
+        if (this.CHILDINDEX !== 0) {
+            for (var i = 0; i < 4; ++i) {
+                if (!this.CHILDREN[i].everyAll(call)) return false;
+            }
         }
         return true;
     }
 
     sub() {
         --this.LEN;
-        this.PARENT.sub();
+        if (this.PARENT != null) this.PARENT.sub();
     }
     delete(node) {
         var ind = this.MAP.indexOf(node)

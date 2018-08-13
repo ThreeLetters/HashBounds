@@ -48,7 +48,7 @@ module.exports = class HashBounds {
         for (var i = this.LVL - 1; i >= 0; --i) {
             var a = this.INITIAL + i;
             var b = 1 << a;
-            this.LEVELS[i] = new Grid(a, i, Math.ceil(this.MAXX / b), Math.ceil(this.MAXY / b), (i == this.LVL - 1) ? undefined : this.LEVELS[i + 1])
+            this.LEVELS[i] = new Grid(a, i, Math.ceil(this.MAXX / b), Math.ceil(this.MAXY / b), (i == this.LVL - 1) ? null : this.LEVELS[i + 1])
             if (i == this.LVL - 1) this.BASE = this.LEVELS[i];
         }
     }
@@ -122,7 +122,7 @@ module.exports = class HashBounds {
     every(bounds, call) {
         if (!call) {
             call = bounds;
-            bounds = false;
+            bounds = null;
         } else
             this.convertBounds(bounds);
 
@@ -131,7 +131,7 @@ module.exports = class HashBounds {
     forEach(bounds, call) {
         if (!call) {
             call = bounds;
-            bounds = false;
+            bounds = null;
         } else
             this.convertBounds(bounds);
 

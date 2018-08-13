@@ -23,7 +23,7 @@ module.exports = class Grid {
         this.POWER = g;
         this.LEVEL = p;
         this.PREV = prev;
-        this.NEXT = undefined;
+        this.NEXT = null;
         this.QUERYID = 1;
         if (this.PREV) this.PREV.NEXT = this;
         this.SIZEX = sizeX;
@@ -48,15 +48,10 @@ module.exports = class Grid {
 
                 var by = i >> 1;
                 var key = x | (i + 32767);
+                var l = null;
 
+                if (this.PREV !== null) l = this.PREV.DATA[bx | (by + 32767)];
 
-                if (this.PREV !== undefined) var l = this.PREV.DATA[bx | (by + 32767)];
-                else
-                    var l = {
-                        CHILDREN: [],
-                        add: function () {},
-                        sub: function () {}
-                    }
                 this.DATA[key] = new Holder(l, j, i, this.POWER, this.LEVEL);
 
             }
@@ -78,18 +73,13 @@ module.exports = class Grid {
     createAt(x, y) {
         var kx = (x + 32767) << 16;
         var ky = y + 32767;
-
-        if (this.PREV !== undefined) {
+        var l = null;
+        if (this.PREV !== null) {
             var bx = ((x >> 1) + 32767) << 16;
             var by = y >> 1;
 
-            var l = this.PREV.DATA[bx | (by + 32767)];
-        } else
-            var l = {
-                CHILDREN: [],
-                add: function () {},
-                sub: function () {}
-            }
+            l = this.PREV.DATA[bx | (by + 32767)];
+        }
 
         this.DATA[kx | ky] = new Holder(l, x, y, this.POWER, this.LEVEL);
 
