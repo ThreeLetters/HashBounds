@@ -27,6 +27,7 @@
             margin: 0 auto;
             background: #000;
         }
+
     </style>
 </head>
 
@@ -45,6 +46,7 @@
     <script>
         (function(w, M) {
             var stats = new Stats();
+
 
             stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
             var config = {
@@ -73,7 +75,9 @@
             });
             var container = document.getElementById('controllerContainer');
             container.appendChild(gui.domElement);
+            gui.domElement.style.display = "inline-block"
             container.appendChild(stats.dom)
+            stats.dom.style = 'position: static;display: inline-block; float: left'
             gui.add(config, "numberOfObjects", 1, 50000).step(1);
             gui.add(config, "sizePowerOfTwo", 1, 15).step(1);
             gui.add(config, "levels", 1, 15).step(1);
@@ -327,9 +331,6 @@
                     }
                 }
 
-                //draw hero
-                ctx.strokeStyle = 'rgba(0,255,0,0.5)';
-                ctx.strokeRect(myHero.x, myHero.y, myHero.width, myHero.height);
 
                 //retrieve all objects in the bounds of the hero 
                 myTree.forEach(myHero, function(obj) {
@@ -338,6 +339,11 @@
                 });
 
                 stats.end();
+
+                //draw hero
+                ctx.strokeStyle = 'rgba(0,255,0,0.5)';
+                ctx.strokeRect(myHero.x, myHero.y, myHero.width, myHero.height);
+
                 //flag retrieved objects
 
 
@@ -364,6 +370,7 @@
             w.myTree = myTree;
 
         })(window, Math);
+
     </script>
     <br>
     <h4>Hashbounds allow you to optimise collision detection. It is hightly efficient and is hierarchical. This means it is more efficient than a Quadtree or a regular spatial hash. </h4>

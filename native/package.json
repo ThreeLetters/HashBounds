@@ -2,20 +2,25 @@
     "name": "hashbounds",
     "version": "4.5.6",
     "description": "A spatial partitioning system",
-    "main": "index.js",
+    "main": "bindings.js",
     "scripts": {
-        "test": "node index.js"
+        "build": "node-gyp build",
+        "install": "node-gyp rebuild",
+        "start": "node ./index.js"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/AJS-development/HashBounds.git"
     },
     "keywords": [
-    "collisions",
-    "trees",
-    "hash",
-    "bounds"
-  ],
+        "collisions",
+        "trees",
+        "hash",
+        "bounds"
+    ],
+    "dependencies": {
+        "nan": "latest"
+    },
     "author": "Andrews54757",
     "license": "AGPL-3.0",
     "bugs": {

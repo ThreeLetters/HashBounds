@@ -23,13 +23,20 @@ module.exports = class Grid {
         this.POWER = g;
         this.LEVEL = p;
         this.PREV = prev;
-        this.NEXT = false;
-
+        this.NEXT = undefined;
+        this.QUERYID = 1;
         if (this.PREV) this.PREV.NEXT = this;
         this.SIZEX = sizeX;
         this.SIZEY = sizeY;
         this.DATA = {};
         this.init()
+    }
+
+    getQueryID() {
+        if (this.QUERYID >= 4294967295) {
+            this.QUERYID = 1;
+        } else this.QUERYID++;
+        return this.QUERYID;
     }
 
     init() {
@@ -43,7 +50,7 @@ module.exports = class Grid {
                 var key = x | (i + 32767);
 
 
-                if (this.PREV) var l = this.PREV.DATA[bx | (by + 32767)];
+                if (this.PREV !== undefined) var l = this.PREV.DATA[bx | (by + 32767)];
                 else
                     var l = {
                         CHILDREN: [],
@@ -55,11 +62,24 @@ module.exports = class Grid {
             }
         }
     }
+    sendCreateAt(x, y) {
+
+        var X = x << this.POWER,
+            Y = y << this.POWER;
+
+        var root = this;
+
+        while (root.PREV) {
+            root = root.PREV;
+        }
+        // console.log("CREATING:")
+        root.createAt(X >> root.POWER, Y >> root.POWER)
+    }
     createAt(x, y) {
         var kx = (x + 32767) << 16;
         var ky = y + 32767;
 
-        if (this.PREV) {
+        if (this.PREV !== undefined) {
             var bx = ((x >> 1) + 32767) << 16;
             var by = y >> 1;
 
@@ -87,10 +107,6 @@ module.exports = class Grid {
             x: x >> this.POWER,
             y: y >> this.POWER
         }
-    }
-    _getKey(x, y) {
-        return x | y
-
     }
     _get(bounds, call) {
         if (!bounds) {
@@ -125,35 +141,11 @@ module.exports = class Grid {
         }
         return true;
     }
-    sendCreateAt(x, y) {
-
-        var X = x << this.POWER,
-            Y = y << this.POWER;
-
-        var root = this;
-
-        while (root.PREV) {
-            root = root.PREV;
-        }
-        // console.log("CREATING:")
-        root.createAt(X >> root.POWER, Y >> root.POWER)
-
-
-    }
-    checkChange(node, bounds) {
-        var x1 = bounds.minX,
-            y1 = bounds.minY,
-            x2 = bounds.maxX,
-            y2 = bounds.maxY;
-
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
-
+    checkChange(node, k1, k2) {
         return node.hash.k1.x != k1.x || node.hash.k1.y != k1.y || node.hash.k2.x != k2.x || node.hash.k2.y != k2.y
     }
 
-    insert(node, bounds) {
-
+    update(node, bounds) {
         var x1 = bounds.minX,
             y1 = bounds.minY,
             x2 = bounds.maxX,
@@ -161,9 +153,27 @@ module.exports = class Grid {
 
         var k1 = this.getKey(x1, y1)
         var k2 = this.getKey(x2, y2)
+
+        if (this.checkChange(node, k1, k2)) {
+            this.delete(node)
+            this.insert(node, bounds, k1, k2)
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+    insert(node, bounds, k1, k2) {
+
+        var x1 = bounds.minX,
+            y1 = bounds.minY,
+            x2 = bounds.maxX,
+            y2 = bounds.maxY;
+
+        k1 = k1 || this.getKey(x1, y1)
+        k2 = k2 || this.getKey(x2, y2)
         node.hash.k1 = k1
         node.hash.k2 = k2
-        node.hash.level = this.LEVEL;
 
         for (var j = k1.x; j <= k2.x; ++j) {
             var x = (j + 32767) << 16;
@@ -195,12 +205,12 @@ module.exports = class Grid {
         }
     }
     toArray(bounds) {
-        var hsh = {};
+        var QID = this.getQueryID();
         var array = [];
         this._get(bounds, function (cell) {
             cell.forEach(bounds, function (obj) {
-                if (hsh[obj._HashID]) return;
-                hsh[obj._HashID] = true;
+                if (obj._HashCheck == QID) return;
+                obj._HashCheck = QID
                 array.push(obj);
 
             })
@@ -209,22 +219,22 @@ module.exports = class Grid {
         return array;
     }
     every(bounds, call) {
-        var hsh = {};
+        var QID = this.getQueryID();
         return this._get(bounds, function (cell) {
             return cell.every(bounds, function (obj, i) {
-                if (hsh[obj._HashID]) return true;
-                hsh[obj._HashID] = true;
+                if (obj._HashCheck == QID) return true;
+                obj._HashCheck = QID
                 return call(obj);
 
             })
         })
     }
     forEach(bounds, call) {
-        var hsh = {};
+        var QID = this.getQueryID();
         this._get(bounds, function (cell) {
             cell.forEach(bounds, function (obj, i) {
-                if (hsh[obj._HashID]) return;
-                hsh[obj._HashID] = true;
+                if (obj._HashCheck == QID) return;
+                obj._HashCheck = QID
                 call(obj);
 
             })

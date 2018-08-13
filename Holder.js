@@ -38,31 +38,18 @@ module.exports = class Holder {
 
         this.CHILDREN = []
     }
+
+    add() {
+        ++this.LEN;
+        this.PARENT.add();
+    }
+
     checkIntersect(r1, r2) {
         var mx1 = r1.x + r1.width,
             mx2 = r2.x + r2.width,
             my1 = r1.y + r1.height,
             my2 = r2.y + r2.height;
-        /*
-        !(r2.left > r1.right || 
-           r2.right < r1.left || 
-           r2.top > r1.bottom ||
-           r2.bottom < r1.top);
-        
-        */
-
-
-
         return !(r2.x >= mx1 || mx2 <= r1.x || r2.y >= my1 || my2 <= r1.y)
-
-    }
-
-
-    add() {
-        ++this.LEN;
-        this.PARENT.add();
-
-
     }
 
     getQuad(bounds, bounds2) {
@@ -105,8 +92,6 @@ module.exports = class Holder {
         if (bounds.width < bounds2.width || bounds.height < bounds2.height) return [0, 1, 2, 3];
         return -1; // too big
     }
-
-
 
     forEachAll(call) {
         if (!this.LEN) return;

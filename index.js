@@ -24,32 +24,32 @@ module.exports = class HashBounds {
         this.LVL = lvl;
         this.MAXX = maxX;
         this.MAXY = maxY || maxX;
-        this.MIN = power;
+        this.POWER = power;
+        this.MAXVAL;
         this.LEVELS = []
         this.lastid = 0;
-        this.BASE = false;
+        this.BASE;
         this.createLevels()
         this.log2 = [];
-        this.setupLog2()
+
+        this.setupLog2();
     }
     setupLog2() {
-        var pow = 1 << this.LVL;
+        var pow = (1 << this.LVL) - 1;
+        this.MAXVAL = pow;
         for (var i = 0; i < pow; ++i) {
-            this.log2[i - 1] = Math.floor(Math.log2(i))
+            this.log2.push(Math.floor(Math.log2(i + 1)))
         }
     }
+
     createLevels() {
         this.LEVELS = [];
-        this.BASE = null;
         this.ID = Math.floor(Math.random() * 100000);
-        var last = false;
         for (var i = this.LVL - 1; i >= 0; --i) {
             var a = this.INITIAL + i;
             var b = 1 << a;
-            var grid = new Grid(a, i, Math.ceil(this.MAXX / b), Math.ceil(this.MAXY / b), last)
-            if (!this.BASE) this.BASE = grid;
-            this.LEVELS[i] = grid;
-            last = grid;
+            this.LEVELS[i] = new Grid(a, i, Math.ceil(this.MAXX / b), Math.ceil(this.MAXY / b), (i == this.LVL - 1) ? undefined : this.LEVELS[i + 1])
+            if (i == this.LVL - 1) this.BASE = this.LEVELS[i];
         }
     }
     clear() {
@@ -57,19 +57,21 @@ module.exports = class HashBounds {
     }
     update(node, bounds) {
 
-        if (node._HashParent !== this.ID) {
+        if (!node._InHash || node._HashParent !== this.ID) {
             return this.insert(node, bounds)
         }
         this.convertBounds(bounds);
         var prev = node._HashIndex
         var level = this.getLevel(node, bounds);
 
-        if (prev != level || this.LEVELS[level].checkChange(node, bounds)) {
+        if (prev != level) {
             this.LEVELS[prev].delete(node)
             this.LEVELS[level].insert(node, bounds);
             return true;
         } else {
-            return false;
+
+            return this.LEVELS[level].update(node, bounds)
+
         }
     }
     getLevel(node, bounds) {
@@ -77,8 +79,13 @@ module.exports = class HashBounds {
             return node._HashIndex;
         }
 
-        var index = this.log2[(Math.max(bounds.width, bounds.height) >> this.MIN)]
-        if (index === undefined) index = this.LVL - 1;
+        var i = (Math.max(bounds.width, bounds.height) >> this.POWER);
+        var index;
+        if (i >= this.MAXVAL) {
+            index = this.LVL - 1;
+        } else {
+            index = this.log2[i];
+        }
 
         node._HashIndex = index;
         node._HashSizeX = bounds.width;
@@ -87,22 +94,24 @@ module.exports = class HashBounds {
         return index;
     }
     insert(node, bounds) {
-        if (node._HashParent === this.ID) throw "ERR: A node cannot be already in this hash!"; // check if it already is inserted
-
-        this.convertBounds(bounds);
-
         if (node._HashParent !== this.ID) {
             node._HashID = ++this.lastid;
             node.hash = {}
             node._HashParent = this.ID;
         }
+        if (node._InHash) throw "ERR: A node cannot be already in this hash!"; // check if it already is inserted
+
+        this.convertBounds(bounds);
+
+
         this.LEVELS[this.getLevel(node, bounds)].insert(node, bounds);
+        node._InHash = true;
     }
 
     delete(node) {
-        if (node._HashParent !== this.ID) throw "ERR: Node is not in this hash!"
-        this.LEVELS[node.hash.level].delete(node)
-        node._HashParent = 0;
+        if (!node._InHash || node._HashParent !== this.ID) throw "ERR: Node is not in this hash!"
+        this.LEVELS[node._HashIndex].delete(node)
+        node._InHash = false;
     }
     toArray(bounds) {
         if (bounds)
