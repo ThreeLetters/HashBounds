@@ -1,10 +1,8 @@
-<!-- Credit belongs to https://github.com/zufallsgenerator/zufallsgenerator.github.io/blob/master/assets/code/2014-01-26/spatialhash/examples/insert_retrieve.html -->
-
 <!doctype html>
 <html>
 
 <head>
-    <title>HashBounds Test</title>
+    <title>Quadtree Test</title>
     <style type="text/css">
         * {
             margin: 0;
@@ -27,32 +25,31 @@
             margin: 0 auto;
             background: #000;
         }
-
     </style>
 </head>
 
 <body>
-    <h1>HashBounds - Demo</h1>
+    <h1>Quadtree</h1>
     <div id="controllerContainer" style="float: right;">
     </div>
     <div id="canvasContainer">
         <canvas id="canvas" width="400" height="300"></canvas>
     </div>
 
-    <script src="../HashBounds.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+    <script src="quadtree.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
     <script type="text/javascript" src="stats.js"></script>
-
     <script>
         (function(w, M) {
             var stats = new Stats();
 
 
             stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+            document.body.appendChild(stats.dom)
             var config = {
                 numberOfObjects: 200,
-                sizePowerOfTwo: 5,
-                levels: 3,
+                objectsPerCell: 10,
+                maxLevels: 4,
                 minSize: 1,
                 maxSize: 25,
                 searchSize: 20
@@ -60,32 +57,27 @@
             var lastConfig = {};
 
             function saveLastConfig() {
+                lastConfig.maxLevels = config.maxLevels;
+                lastConfig.objectsPerCell = config.objectsPerCell;
                 lastConfig.numberOfObjects = config.numberOfObjects;
-                lastConfig.sizePowerOfTwo = config.sizePowerOfTwo;
-                lastConfig.levels = config.levels;
                 lastConfig.minSize = config.minSize;
                 lastConfig.maxSize = config.maxSize;
                 lastConfig.searchSize = config.searchSize;
             }
-
-
 
             var gui = new dat.GUI({
                 autoPlace: false
             });
             var container = document.getElementById('controllerContainer');
             container.appendChild(gui.domElement);
-            gui.domElement.style.display = "inline-block"
-            container.appendChild(stats.dom)
-            stats.dom.style = 'position: static;display: inline-block; float: left'
             gui.add(config, "numberOfObjects", 1, 50000).step(1);
-            gui.add(config, "sizePowerOfTwo", 1, 15).step(1);
-            gui.add(config, "levels", 1, 15).step(1);
+
+            gui.add(config, "objectsPerCell", 1, 100).step(1);
+            gui.add(config, "maxLevels", 1, 10).step(1);
             gui.add(config, "minSize", 1, 99).step(1);
             gui.add(config, "maxSize", 1, 100).step(1);
             gui.add(config, "searchSize", 1, 300).step(1);
             saveLastConfig();
-
 
             w.requestAnimFrame = (function() {
                 return w.requestAnimationFrame ||
@@ -104,28 +96,24 @@
             /*
              * the main Quadtree
              */
-            /*
-			var myTree = new Quadtree({
-				x: 0,
-				y: 0,
-				width: 400,
-				height: 300
-			});
-      */
             var myTree;
+
+            function initQuadTree() {
+                myTree = new Quadtree({
+                    x: 0,
+                    y: 0,
+                    width: 400,
+                    height: 300
+                }, config.objectsPerCell, config.maxLevels);
+            }
+
+            initQuadTree();
+
+
             /*
              * our objects will be stored here
              */
             var myObjects = [];
-
-            function initSpatialHash() {
-                myTree = new HashBounds(config.sizePowerOfTwo, config.levels, 500);
-
-            }
-
-            initSpatialHash();
-
-
 
             /*
              * our "hero"
@@ -136,23 +124,19 @@
                 width: config.searchSize,
                 height: config.searchSize
             };
-            window.box = myHero;
 
 
             /*
              * create some objects and save them in myObjects
              */
             var createObjects = function() {
-                myTree.clear()
-                myObjects = [];
+                myObjects.length = 0;
                 for (var i = 0; i < config.numberOfObjects; i = i + 1) {
                     myObjects.push({
-                        bounds: {
-                            x: randMinMax(10, 390),
-                            y: randMinMax(10, 290),
-                            width: randMinMax(config.minSize, config.maxSize),
-                            height: randMinMax(config.minSize, config.maxSize)
-                        },
+                        x: randMinMax(10, 390),
+                        y: randMinMax(10, 290),
+                        width: randMinMax(config.minSize, config.maxSize),
+                        height: randMinMax(config.minSize, config.maxSize),
                         vx: randMinMax(-1, 1),
                         vy: randMinMax(-1, 1),
                         check: false
@@ -164,53 +148,20 @@
             /*
              * draw Quadtree nodes
              */
-            var drawQuadtree = function(tree) {
+            var drawQuadtree = function(node) {
+                var bounds = node.bounds;
 
-                var drawGrid = function(ctx, w, h, step, color) {
-                    ctx.save()
-                    ctx.beginPath();
-                    for (var x = 0; x <= w; x += step) {
-                        ctx.moveTo(x, 0);
-                        ctx.lineTo(x, h);
+                //no subnodes? draw the current node
+                if (node.nodes.length === 0) {
+                    ctx.strokeStyle = 'rgba(255,0,0,0.2)';
+                    ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+                    //has subnodes? drawQuadtree them!
+                } else {
+                    for (var i = 0; i < node.nodes.length; i = i + 1) {
+                        drawQuadtree(node.nodes[i]);
                     }
-                    // set the color of the line
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = 3;
-                    // the stroke will actually paint the current path 
-                    ctx.stroke();
-                    // for the sake of the example 2nd path
-                    ctx.beginPath();
-                    for (var y = 0; y <= h; y += step) {
-                        ctx.moveTo(0, y);
-                        ctx.lineTo(w, y);
-                    }
-                    // set the color of the line
-                    ctx.strokeStyle = color;
-                    // just for fun
-                    ctx.lineWidth = 3;
-                    // for your original question - you need to stroke only once
-                    ctx.stroke();
-                    ctx.restore()
-                };
-
-                var r = 0,
-                    g = 255,
-                    b = 0,
-                    step = (255 / tree.LVL - 1);
-
-                var current = tree.BASE;
-                while (current) {
-
-
-                    drawGrid(ctx, tree.MAXX, tree.MAXY, 1 << current.POWER, "rgba(" + (r >> 0) + "," + (g >> 0) + ",0,0.1)")
-                    r += step
-                    g -= step
-                    current = current.NEXT;
-
                 }
-
-
-
             };
 
             /*
@@ -218,14 +169,13 @@
              */
             var drawObjects = function(node) {
 
-                /*
-				var obj;
-        */
-                var obj, objects = myObjects; // get all
+                var obj;
 
-                for (var i = 0; i < objects.length; i = i + 1) {
+                //draw each object in current node
+                for (var i = 0; i < node.objects.length; i = i + 1) {
 
-                    obj = objects[i];
+                    obj = node.objects[i];
+
 
                     if (obj.check == 2) {
                         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
@@ -235,9 +185,16 @@
                         ctx.strokeStyle = 'rgba(200,255,255,0.4)';
                     }
 
-                    ctx.strokeRect(obj.bounds.x, obj.bounds.y, obj.bounds.width, obj.bounds.height);
+
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
                 }
 
+                //drawObjects for every subnode, too
+                if (node.nodes.length !== 0) {
+                    for (i = 0; i < node.nodes.length; i = i + 1) {
+                        drawObjects(node.nodes[i]);
+                    }
+                }
             };
 
             /*
@@ -266,27 +223,25 @@
                 return min + (M.random() * (max - min));
             };
 
+
             function updateDatGui() {
-                if (lastConfig.numberOfObjects !== config.numberOfObjects) {
+                var newTree = false;
+                var newObjects = false;
+
+                if (lastConfig.maxLevels !== config.maxLevels ||
+                    lastConfig.objectsPerCell !== config.objectsPerCell ||
+                    lastConfig.numberOfObjects !== config.numberOfObjects || lastConfig.minSize !== config.minSize || lastConfig.maxSize !== config.maxSize) {
+                    newTree = true;
+                }
+                myHero.width = myHero.height = config.searchSize
+
+                saveLastConfig();
+
+                if (newTree) {
+                    initQuadTree();
                     createObjects();
                 }
 
-                if (lastConfig.sizePowerOfTwo !== config.sizePowerOfTwo) {
-                    initSpatialHash();
-                    createObjects();
-                }
-                if (lastConfig.levels !== config.levels) {
-                    initSpatialHash();
-                    createObjects();
-                }
-                if (lastConfig.minSize !== config.minSize || lastConfig.maxSize !== config.maxSize) {
-                    createObjects();
-                }
-                if (lastConfig.searchSize !== config.searchSize) {
-                    myHero.width = config.searchSize;
-                    myHero.height = config.searchSize;
-                }
-                saveLastConfig();
             }
 
             /*
@@ -295,56 +250,64 @@
             var loop = function() {
                 updateDatGui();
 
-                window.returnObjects = [];
+                var returnObjects = [];
 
-                //clear the tree
 
                 ctx.clearRect(0, 0, 400, 300);
-
-                //update myObjects and insert them into the tree again
                 stats.begin();
+
+
+                //clear the tree
+                myTree.clear();
                 window.average = 0;
+                //update myObjects and insert them into the tree again
                 for (var i = 0; i < myObjects.length; i = i + 1) {
 
-                    myObjects[i].bounds.x += myObjects[i].vx;
-                    myObjects[i].bounds.y += myObjects[i].vy;
+                    myObjects[i].x += myObjects[i].vx;
+                    myObjects[i].y += myObjects[i].vy;
                     myObjects[i].check = 0;
 
-                    if (myObjects[i].bounds.x > 400) myObjects[i].bounds.x = 0;
-                    if (myObjects[i].bounds.x < 0) myObjects[i].bounds.x = 400;
-                    if (myObjects[i].bounds.y > 300) myObjects[i].bounds.y = 0;
-                    if (myObjects[i].bounds.y < 0) myObjects[i].bounds.y = 300;
+                    if (myObjects[i].x > 400) myObjects[i].x = 0;
+                    if (myObjects[i].x < 0) myObjects[i].x = 400;
+                    if (myObjects[i].y > 300) myObjects[i].y = 0;
+                    if (myObjects[i].y < 0) myObjects[i].y = 300;
 
 
-                    if (myObjects[i].hash) myTree.update(myObjects[i], myObjects[i].bounds);
-                    else myTree.insert(myObjects[i], myObjects[i].bounds)
 
+
+
+                    myTree.insert(myObjects[i]);
                 }
-
-
                 for (var i = 0; i < myObjects.length; i = i + 1) {
-                    // var elements = myTree.toArray(myObjects[i].bounds);
-                    if (!myTree.every(myObjects[i].bounds, (obj) => {
+
+
+
+                    if (!myTree.retrieve({
+                            x: myObjects[i].x,
+                            y: myObjects[i].y,
+                            width: myObjects[i].width,
+                            height: myObjects[i].height
+                        }, (obj) => {
                             if (obj == myObjects[i]) return true;
 
-                            var orig = myObjects[i].bounds;
-                            obj = obj.bounds;
+                            var orig = myObjects[i]
                             //if (i == 0) console.log(myObjects[i].bounds, obj.bounds)
-                            return obj.x > orig.maxX || obj.y > orig.maxY || obj.maxX < orig.x || obj.maxY < orig.y
+                            return obj.x > orig.x + orig.width || obj.y > orig.y + orig.height || obj.x + obj.width < orig.x || obj.y + obj.height < orig.y
+
                         })) {
                         myObjects[i].check = 1;
                     }
-                    // window.average += elements.length;
+
+                    //    window.average += elements.length;
                 }
-                // window.average = window.average / myObjects.length
 
-
-
+                //  window.average = window.average / myObjects.length;
                 //retrieve all objects in the bounds of the hero 
-                myTree.forEach(myHero, function(obj) {
-                    window.returnObjects.push(obj)
+                returnObjects = myTree.retrieve(myHero, (obj) => {
                     obj.check = 2;
                 });
+
+
 
                 stats.end();
 
@@ -352,17 +315,12 @@
                 ctx.strokeStyle = 'rgba(0,255,0,0.5)';
                 ctx.strokeRect(myHero.x, myHero.y, myHero.width, myHero.height);
 
-                //flag retrieved objects
-
-
 
 
                 drawQuadtree(myTree);
-
                 drawObjects(myTree);
 
                 requestAnimFrame(loop);
-
             };
 
             //create objects
@@ -378,10 +336,7 @@
             w.myTree = myTree;
 
         })(window, Math);
-
     </script>
-    <br>
-    <h4>Hashbounds allow you to optimise collision detection. It is hightly efficient and is hierarchical. This means it is more efficient than a Quadtree or a regular spatial hash. </h4>
 </body>
 
 </html>

@@ -4,7 +4,7 @@
  Author: Andrews54757
  License: AGPL-3.0 (https://github.com/ThreeLetters/HashBounds/blob/master/LICENSE)
  Source: https://github.com/ThreeLetters/HashBounds
- Build: v4.5.6
+ Build: v4.5.7
  Built on: 14/08/2018
 */
 
