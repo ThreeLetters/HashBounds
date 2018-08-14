@@ -25,6 +25,7 @@ module.exports = class Holder {
         this.LEN = 0;
         this.X = x;
         this.Y = y;
+        this.KEY = ((x + 32767) << 16) | (y + 32767);
         this.BOUNDS = {
             x: x << power,
             y: y << power,
@@ -96,58 +97,39 @@ module.exports = class Holder {
         }
         return -1; // too big
     }
+    _every(call, QID) {
+        for (var i = 0; i < this.MAP.length; i++) {
+            if (this.MAP[i].hash.check != QID) {
 
-    forEachAll(call) {
-        if (this.LEN === 0) return;
-        this.MAP.forEach(call)
-
-        if (this.CHILDINDEX !== 0) {
-            for (var i = 0; i < 4; ++i) {
-                this.CHILDREN[i].forEachAll(call)
+                this.MAP[i].hash.check = QID;
+                if (!call(this.MAP[i])) return false;
             }
         }
-
+        return true;
     }
-    forEach(bounds, call) {
-        if (this.LEN === 0) return;
-        if (!bounds) return this.forEachAll(call);
-
-        var quads = this.getQuad(bounds, this.BOUNDS)
-
-        if (quads === -1) return this.forEachAll(call);
-
-        this.MAP.forEach(call)
-
-        if (quads === -2) {
-            return
-        }
-
-        for (var i = 0, l = quads.length; i < l; i++) {
-            quads[i].forEach(bounds, call)
-        }
-    }
-    every(bounds, call) {
+    every(bounds, call, QID) {
         if (this.LEN === 0) return true;
-        if (!bounds) return this.everyAll(call);
-
         var quads = this.getQuad(bounds, this.BOUNDS)
 
-        if (quads === -1) return this.everyAll(call);
+        if (quads === -1) return this.everyAll(call, QID);
 
-        if (!this.MAP.every(call)) return false;
+        if (!this._every(call, QID)) return false;
 
         if (quads === -2) return true;
 
-        return quads.every((q) => {
-            return q.every(bounds, call)
-        })
+        for (var i = 0; i < quads.length; i++) {
+            if (!quads[i].every(bounds, call, QID)) return false;
+        }
+        return true;
     }
-    everyAll(call) {
+
+    everyAll(call, QID) {
         if (this.LEN === 0) return true;
-        if (!this.MAP.every(call)) return false;
+
+        if (!this._every(call, QID)) return false;
         if (this.CHILDINDEX !== 0) {
             for (var i = 0; i < 4; ++i) {
-                if (!this.CHILDREN[i].everyAll(call)) return false;
+                if (!this.CHILDREN[i].everyAll(call, QID)) return false;
             }
         }
         return true;
@@ -157,14 +139,16 @@ module.exports = class Holder {
         --this.LEN;
         if (this.PARENT != null) this.PARENT.sub();
     }
-    delete(node) {
-        var ind = this.MAP.indexOf(node)
-        this.MAP[ind] = this.MAP[this.MAP.length - 1];
+    delete(node, key) {
+
+        var index = node.hash.indexes[key];
+        var swap = this.MAP[index] = this.MAP[this.MAP.length - 1];
+        swap.hash.indexes[(this.X - swap.hash.k1x) * (swap.hash.k2y - swap.hash.k1y + 1) + this.Y - swap.hash.k1y] = index;
         this.MAP.pop();
         this.sub()
     }
-    set(node) {
-
+    set(node, key) {
+        node.hash.indexes[key] = this.MAP.length;
         this.MAP.push(node)
         this.add()
     }

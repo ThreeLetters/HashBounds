@@ -88,8 +88,14 @@ var bounds = {
 6. forEach(bounds,call): Loop through objects in certain bounds
 7. every(bounds,call): Same as .forEach(bounds), but stops execution when returning false
 
-## HashBounds vs QuadTree comparison:
+## Efficiency
 
-![screen shot 2018-08-06 at 5 55 48 pm](https://user-images.githubusercontent.com/13282284/43742985-0adeaa32-99a2-11e8-9530-8aff1813ec44.png)
-![screen shot 2018-08-06 at 5 56 04 pm](https://user-images.githubusercontent.com/13282284/43742986-0aebe224-99a2-11e8-81a1-dacd18aeeb4d.png)
+### Insert/delete/update - O(1)
+
+Insert, delete, and update are the most efficient operations for HashBounds. The level of an object and it's position in that level is determined at O(1) time. Since the hashes are "layered", an object will generally belong to 4 buckets max. However, if the object is larger than the biggest bucket, then the efficiency would be the same in a normal spatial hash.
+
+### forEach/every/toArray - O(n log(n))
+
+Looking for objects generally take O(n log(n)) time if the search area is smaller than the greatest bucket as objects are retrieved in a quad-tree like fashion. This way, empty "branches of buckets" are quickly tossed, and costly loops are avoided.
+
 

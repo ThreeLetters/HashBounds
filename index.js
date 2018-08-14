@@ -30,15 +30,24 @@ module.exports = class HashBounds {
         this.lastid = 0;
         this.BASE;
         this.createLevels()
-        this.log2 = [];
-
+        this.log2;
+        this.QUERYID = 1;
         this.setupLog2();
     }
+    getQueryID() {
+        if (this.QUERYID >= 4294967295) {
+            this.QUERYID = 1;
+        } else this.QUERYID++;
+        return this.QUERYID;
+    }
+
     setupLog2() {
         var pow = (1 << this.LVL) - 1;
         this.MAXVAL = pow;
+        this.log2 = new Uint8Array(pow);
+
         for (var i = 0; i < pow; ++i) {
-            this.log2.push(Math.floor(Math.log2(i + 1)))
+            this.log2[i] = (Math.floor(Math.log2(i + 1)))
         }
     }
 
@@ -61,7 +70,7 @@ module.exports = class HashBounds {
             return this.insert(node, bounds)
         }
         this.convertBounds(bounds);
-        var prev = node._HashIndex
+        var prev = node.hash.cachedIndex;
         var level = this.getLevel(node, bounds);
 
         if (prev != level) {
@@ -75,8 +84,8 @@ module.exports = class HashBounds {
         }
     }
     getLevel(node, bounds) {
-        if (node._HashSizeX === bounds.width && node._HashSizeY === bounds.height) {
-            return node._HashIndex;
+        if (node.hash.cacheWidth === bounds.width && node.hash.cacheHeight === bounds.height) {
+            return node.hash.cachedIndex;
         }
 
         var i = (Math.max(bounds.width, bounds.height) >> this.POWER);
@@ -87,18 +96,28 @@ module.exports = class HashBounds {
             index = this.log2[i];
         }
 
-        node._HashIndex = index;
-        node._HashSizeX = bounds.width;
-        node._HashSizeY = bounds.height;
+        node.hash.cachedIndex = index;
+        node.hash.cacheWidth = bounds.width;
+        node.hash.cacheHeight = bounds.height;
 
         return index;
     }
     insert(node, bounds) {
         if (node._HashParent !== this.ID) {
-            node._HashID = ++this.lastid;
-            node.hash = {}
+            node.hash = {
+                k1x: 0,
+                k1y: 0,
+                k2x: 0,
+                k2y: 0,
+                indexes: [],
+                cachedIndex: 0,
+                cacheWidth: 0,
+                cacheHeight: 0,
+                id: ++this.lastid,
+                check: 0
+            }
             node._HashParent = this.ID;
-        }
+        } else
         if (node._InHash) throw "ERR: A node cannot be already in this hash!"; // check if it already is inserted
 
         this.convertBounds(bounds);
@@ -110,14 +129,19 @@ module.exports = class HashBounds {
 
     delete(node) {
         if (!node._InHash || node._HashParent !== this.ID) throw "ERR: Node is not in this hash!"
-        this.LEVELS[node._HashIndex].delete(node)
+        this.LEVELS[node.hash.cachedIndex].delete(node)
         node._InHash = false;
     }
     toArray(bounds) {
         if (bounds)
             this.convertBounds(bounds);
-
-        return this.BASE.toArray(bounds);
+        else bounds = null;
+        var arr = [];
+        this.BASE.every(bounds, (obj) => {
+            arr.push(obj);
+            return true;
+        }, this.getQueryID())
+        return arr;
     }
     every(bounds, call) {
         if (!call) {
@@ -126,7 +150,7 @@ module.exports = class HashBounds {
         } else
             this.convertBounds(bounds);
 
-        return this.BASE.every(bounds, call);
+        return this.BASE.every(bounds, call, this.getQueryID());
     }
     forEach(bounds, call) {
         if (!call) {
@@ -135,7 +159,10 @@ module.exports = class HashBounds {
         } else
             this.convertBounds(bounds);
 
-        this.BASE.forEach(bounds, call)
+        this.BASE.every(bounds, (obj) => {
+            call(obj)
+            return true;
+        }, this.getQueryID());
     }
     mmToPS(bounds) { // min-max to pos-size
         bounds.x = bounds.minX;

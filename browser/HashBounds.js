@@ -5,7 +5,7 @@
  License: AGPL-3.0 (https://github.com/ThreeLetters/HashBounds/blob/master/LICENSE)
  Source: https://github.com/ThreeLetters/HashBounds
  Build: v4.5.6
- Built on: 13/08/2018
+ Built on: 14/08/2018
 */
 
 // /Library/WebServer/Documents/HashBounds/Holder.js
@@ -20,6 +20,7 @@ class Holder {
         this.LEN = 0;
         this.X = x;
         this.Y = y;
+        this.KEY = ((x + 32767) << 16) | (y + 32767);
         this.BOUNDS = {
             x: x << power,
             y: y << power,
@@ -91,58 +92,39 @@ class Holder {
         }
         return -1; // too big
     }
+    _every(call, QID) {
+        for (var i = 0; i < this.MAP.length; i++) {
+            if (this.MAP[i].hash.check != QID) {
 
-    forEachAll(call) {
-        if (this.LEN === 0) return;
-        this.MAP.forEach(call)
-
-        if (this.CHILDINDEX !== 0) {
-            for (var i = 0; i < 4; ++i) {
-                this.CHILDREN[i].forEachAll(call)
+                this.MAP[i].hash.check = QID;
+                if (!call(this.MAP[i])) return false;
             }
         }
-
+        return true;
     }
-    forEach(bounds, call) {
-        if (this.LEN === 0) return;
-        if (!bounds) return this.forEachAll(call);
-
-        var quads = this.getQuad(bounds, this.BOUNDS)
-
-        if (quads === -1) return this.forEachAll(call);
-
-        this.MAP.forEach(call)
-
-        if (quads === -2) {
-            return
-        }
-
-        for (var i = 0, l = quads.length; i < l; i++) {
-            quads[i].forEach(bounds, call)
-        }
-    }
-    every(bounds, call) {
+    every(bounds, call, QID) {
         if (this.LEN === 0) return true;
-        if (!bounds) return this.everyAll(call);
-
         var quads = this.getQuad(bounds, this.BOUNDS)
 
-        if (quads === -1) return this.everyAll(call);
+        if (quads === -1) return this.everyAll(call, QID);
 
-        if (!this.MAP.every(call)) return false;
+        if (!this._every(call, QID)) return false;
 
         if (quads === -2) return true;
 
-        return quads.every((q) => {
-            return q.every(bounds, call)
-        })
+        for (var i = 0; i < quads.length; i++) {
+            if (!quads[i].every(bounds, call, QID)) return false;
+        }
+        return true;
     }
-    everyAll(call) {
+
+    everyAll(call, QID) {
         if (this.LEN === 0) return true;
-        if (!this.MAP.every(call)) return false;
+
+        if (!this._every(call, QID)) return false;
         if (this.CHILDINDEX !== 0) {
             for (var i = 0; i < 4; ++i) {
-                if (!this.CHILDREN[i].everyAll(call)) return false;
+                if (!this.CHILDREN[i].everyAll(call, QID)) return false;
             }
         }
         return true;
@@ -152,14 +134,16 @@ class Holder {
         --this.LEN;
         if (this.PARENT != null) this.PARENT.sub();
     }
-    delete(node) {
-        var ind = this.MAP.indexOf(node)
-        this.MAP[ind] = this.MAP[this.MAP.length - 1];
+    delete(node, key) {
+
+        var index = node.hash.indexes[key];
+        var swap = this.MAP[index] = this.MAP[this.MAP.length - 1];
+        swap.hash.indexes[(this.X - swap.hash.k1x) * (swap.hash.k2y - swap.hash.k1y + 1) + this.Y - swap.hash.k1y] = index;
         this.MAP.pop();
         this.sub()
     }
-    set(node) {
-
+    set(node, key) {
+        node.hash.indexes[key] = this.MAP.length;
         this.MAP.push(node)
         this.add()
     }
@@ -177,13 +161,6 @@ class Grid {
         this.SIZEY = sizeY;
         this.DATA = {};
         this.init()
-    }
-
-    getQueryID() {
-        if (this.QUERYID >= 4294967295) {
-            this.QUERYID = 1;
-        } else this.QUERYID++;
-        return this.QUERYID;
     }
 
     init() {
@@ -246,40 +223,10 @@ class Grid {
         }
     }
     _get(bounds, call) {
-        if (!bounds) {
-            for (var key in this.DATA) {
-                if (this.DATA[key]) {
-                    if (!call(this.DATA[key])) return false
-                }
-            }
-            return true;
-        }
-        var x1 = bounds.minX,
-            y1 = bounds.minY,
-            x2 = bounds.maxX,
-            y2 = bounds.maxY;
 
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
-
-        for (var j = k1.x; j <= k2.x; ++j) {
-
-            var x = (j + 32767) << 16;
-
-            for (var i = k1.y; i <= k2.y; ++i) {
-
-
-                var key = x | (i + 32767);
-                if (this.DATA[key]) {
-                    if (!call(this.DATA[key])) return false
-                }
-
-            }
-        }
-        return true;
     }
-    checkChange(node, k1, k2) {
-        return node.hash.k1.x != k1.x || node.hash.k1.y != k1.y || node.hash.k2.x != k2.x || node.hash.k2.y != k2.y
+    checkChange(node, k1x, k1y, k2x, k2y) {
+        return node.hash.k1x != k1x || node.hash.k1y != k1y || node.hash.k2x != k2x || node.hash.k2y != k2y
     }
 
     update(node, bounds) {
@@ -288,96 +235,100 @@ class Grid {
             x2 = bounds.maxX,
             y2 = bounds.maxY;
 
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
 
-        if (this.checkChange(node, k1, k2)) {
+        var k1x = x1 >> this.POWER,
+            k1y = y1 >> this.POWER,
+            k2x = x2 >> this.POWER,
+            k2y = y2 >> this.POWER;
+
+        if (this.checkChange(node, k1x, k1y, k2x, k2y)) {
             this.delete(node)
-            this.insert(node, bounds, k1, k2)
+            this.insert(node, bounds, k1x, k1y, k2x, k2y)
             return true;
         } else {
             return false;
         }
 
     }
-    insert(node, bounds, k1, k2) {
+    insert(node, bounds, k1x, k1y, k2x, k2y) {
 
         var x1 = bounds.minX,
             y1 = bounds.minY,
             x2 = bounds.maxX,
             y2 = bounds.maxY;
-
-        k1 = k1 || this.getKey(x1, y1)
-        k2 = k2 || this.getKey(x2, y2)
-        node.hash.k1 = k1
-        node.hash.k2 = k2
-
-        for (var j = k1.x; j <= k2.x; ++j) {
+        if (k1x === undefined) {
+            k1x = x1 >> this.POWER;
+            k1y = y1 >> this.POWER;
+            k2x = x2 >> this.POWER;
+            k2y = y2 >> this.POWER;
+        }
+        node.hash.k1x = k1x
+        node.hash.k1y = k1y;
+        node.hash.k2x = k2x
+        node.hash.k2y = k2y;
+        var width = (k2x - k1x + 1),
+            height = (k2y - k1y + 1)
+        for (var j = k1x; j <= k2x; ++j) {
             var x = (j + 32767) << 16;
-            for (var i = k1.y; i <= k2.y; ++i) {
+            var x2 = (j - k1x) * height;
+            for (var i = k1y; i <= k2y; ++i) {
                 var ke = x | (i + 32767);
                 // console.log(ke)
                 if (!this.DATA[ke]) this.sendCreateAt(j, i);
 
-                this.DATA[ke].set(node)
+                this.DATA[ke].set(node, x2 + i - k1y)
             }
         }
         return true;
     }
     delete(node) {
-        var k1 = node.hash.k1
-        var k2 = node.hash.k2
-        var lenX = k2.x,
-            lenY = k2.y;
-        for (var j = k1.x; j <= lenX; ++j) {
+        var k1x = node.hash.k1x
+        var k1y = node.hash.k1y;
+        var k2x = node.hash.k2x;
+        var k2y = node.hash.k2y
+        var width = (k2x - k1x + 1),
+            height = (k2y - k1y + 1);
+        for (var j = k1x; j <= k2x; ++j) {
             var x = (j + 32767) << 16;
-            for (var i = k1.y; i <= lenY; ++i) {
-
-
+            var x2 = (j - k1x) * height;
+            for (var i = k1y; i <= k2y; ++i) {
                 var ke = x | (i + 32767);
-
-                this.DATA[ke].delete(node)
+                this.DATA[ke].delete(node, x2 + i - k1y)
             }
-
         }
     }
-    toArray(bounds) {
-        var QID = this.getQueryID();
-        var array = [];
-        this._get(bounds, function (cell) {
-            cell.forEach(bounds, function (obj) {
-                if (obj._HashCheck == QID) return;
-                obj._HashCheck = QID
-                array.push(obj);
 
-            })
+    every(bounds, call, QID) {
+        if (bounds === null) {
+            for (var key in this.DATA) {
+                if (this.DATA[key]) {
+                    if (!this.DATA[key].everyAll(call, QID)) return false
+                }
+            }
             return true;
-        })
-        return array;
-    }
-    every(bounds, call) {
-        var QID = this.getQueryID();
-        return this._get(bounds, function (cell) {
-            return cell.every(bounds, function (obj, i) {
-                if (obj._HashCheck == QID) return true;
-                obj._HashCheck = QID
-                return call(obj);
+        }
+        var x1 = bounds.minX,
+            y1 = bounds.minY,
+            x2 = bounds.maxX,
+            y2 = bounds.maxY;
 
-            })
-        })
-    }
-    forEach(bounds, call) {
-        var QID = this.getQueryID();
-        this._get(bounds, function (cell) {
-            cell.forEach(bounds, function (obj, i) {
-                if (obj._HashCheck == QID) return;
-                obj._HashCheck = QID
-                call(obj);
+        var k1x = x1 >> this.POWER,
+            k1y = y1 >> this.POWER,
+            k2x = x2 >> this.POWER,
+            k2y = y2 >> this.POWER;
 
-            })
-            return true;
-        })
+        for (var j = k1x; j <= k2x; ++j) {
+            var x = (j + 32767) << 16;
+            for (var i = k1y; i <= k2y; ++i) {
+                var key = x | (i + 32767);
+                if (this.DATA[key]) {
+                    if (!this.DATA[key].every(bounds, call, QID)) return false
+                }
+            }
+        }
+        return true;
     }
+
 }
 // /Library/WebServer/Documents/HashBounds/index.js
 class HashBounds {
@@ -392,15 +343,24 @@ class HashBounds {
         this.lastid = 0;
         this.BASE;
         this.createLevels()
-        this.log2 = [];
-
+        this.log2;
+        this.QUERYID = 1;
         this.setupLog2();
     }
+    getQueryID() {
+        if (this.QUERYID >= 4294967295) {
+            this.QUERYID = 1;
+        } else this.QUERYID++;
+        return this.QUERYID;
+    }
+
     setupLog2() {
         var pow = (1 << this.LVL) - 1;
         this.MAXVAL = pow;
+        this.log2 = new Uint8Array(pow);
+
         for (var i = 0; i < pow; ++i) {
-            this.log2.push(Math.floor(Math.log2(i + 1)))
+            this.log2[i] = (Math.floor(Math.log2(i + 1)))
         }
     }
 
@@ -423,7 +383,7 @@ class HashBounds {
             return this.insert(node, bounds)
         }
         this.convertBounds(bounds);
-        var prev = node._HashIndex
+        var prev = node.hash.cachedIndex;
         var level = this.getLevel(node, bounds);
 
         if (prev != level) {
@@ -437,8 +397,8 @@ class HashBounds {
         }
     }
     getLevel(node, bounds) {
-        if (node._HashSizeX === bounds.width && node._HashSizeY === bounds.height) {
-            return node._HashIndex;
+        if (node.hash.cacheWidth === bounds.width && node.hash.cacheHeight === bounds.height) {
+            return node.hash.cachedIndex;
         }
 
         var i = (Math.max(bounds.width, bounds.height) >> this.POWER);
@@ -449,18 +409,28 @@ class HashBounds {
             index = this.log2[i];
         }
 
-        node._HashIndex = index;
-        node._HashSizeX = bounds.width;
-        node._HashSizeY = bounds.height;
+        node.hash.cachedIndex = index;
+        node.hash.cacheWidth = bounds.width;
+        node.hash.cacheHeight = bounds.height;
 
         return index;
     }
     insert(node, bounds) {
         if (node._HashParent !== this.ID) {
-            node._HashID = ++this.lastid;
-            node.hash = {}
+            node.hash = {
+                k1x: 0,
+                k1y: 0,
+                k2x: 0,
+                k2y: 0,
+                indexes: [],
+                cachedIndex: 0,
+                cacheWidth: 0,
+                cacheHeight: 0,
+                id: ++this.lastid,
+                check: 0
+            }
             node._HashParent = this.ID;
-        }
+        } else
         if (node._InHash) throw "ERR: A node cannot be already in this hash!"; // check if it already is inserted
 
         this.convertBounds(bounds);
@@ -472,14 +442,19 @@ class HashBounds {
 
     delete(node) {
         if (!node._InHash || node._HashParent !== this.ID) throw "ERR: Node is not in this hash!"
-        this.LEVELS[node._HashIndex].delete(node)
+        this.LEVELS[node.hash.cachedIndex].delete(node)
         node._InHash = false;
     }
     toArray(bounds) {
         if (bounds)
             this.convertBounds(bounds);
-
-        return this.BASE.toArray(bounds);
+        else bounds = null;
+        var arr = [];
+        this.BASE.every(bounds, (obj) => {
+            arr.push(obj);
+            return true;
+        }, this.getQueryID())
+        return arr;
     }
     every(bounds, call) {
         if (!call) {
@@ -488,7 +463,7 @@ class HashBounds {
         } else
             this.convertBounds(bounds);
 
-        return this.BASE.every(bounds, call);
+        return this.BASE.every(bounds, call, this.getQueryID());
     }
     forEach(bounds, call) {
         if (!call) {
@@ -497,7 +472,10 @@ class HashBounds {
         } else
             this.convertBounds(bounds);
 
-        this.BASE.forEach(bounds, call)
+        this.BASE.every(bounds, (obj) => {
+            call(obj)
+            return true;
+        }, this.getQueryID());
     }
     mmToPS(bounds) { // min-max to pos-size
         bounds.x = bounds.minX;

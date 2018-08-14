@@ -27,7 +27,6 @@
             margin: 0 auto;
             background: #000;
         }
-
     </style>
 </head>
 
@@ -303,6 +302,7 @@
 
                 //update myObjects and insert them into the tree again
                 stats.begin();
+                window.average = 0;
                 for (var i = 0; i < myObjects.length; i = i + 1) {
 
                     myObjects[i].bounds.x += myObjects[i].vx;
@@ -318,7 +318,11 @@
                     if (myObjects[i].hash) myTree.update(myObjects[i], myObjects[i].bounds);
                     else myTree.insert(myObjects[i], myObjects[i].bounds)
 
+                }
 
+
+                for (var i = 0; i < myObjects.length; i = i + 1) {
+                    // var elements = myTree.toArray(myObjects[i].bounds);
                     if (!myTree.every(myObjects[i].bounds, (obj) => {
                             if (obj == myObjects[i]) return true;
 
@@ -329,7 +333,10 @@
                         })) {
                         myObjects[i].check = 1;
                     }
+                    // window.average += elements.length;
                 }
+                // window.average = window.average / myObjects.length
+
 
 
                 //retrieve all objects in the bounds of the hero 
@@ -370,7 +377,6 @@
             w.myTree = myTree;
 
         })(window, Math);
-
     </script>
     <br>
     <h4>Hashbounds allow you to optimise collision detection. It is hightly efficient and is hierarchical. This means it is more efficient than a Quadtree or a regular spatial hash. </h4>

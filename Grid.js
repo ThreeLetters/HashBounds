@@ -32,13 +32,6 @@ module.exports = class Grid {
         this.init()
     }
 
-    getQueryID() {
-        if (this.QUERYID >= 4294967295) {
-            this.QUERYID = 1;
-        } else this.QUERYID++;
-        return this.QUERYID;
-    }
-
     init() {
 
         for (var j = 0; j < this.SIZEX; ++j) {
@@ -99,40 +92,10 @@ module.exports = class Grid {
         }
     }
     _get(bounds, call) {
-        if (!bounds) {
-            for (var key in this.DATA) {
-                if (this.DATA[key]) {
-                    if (!call(this.DATA[key])) return false
-                }
-            }
-            return true;
-        }
-        var x1 = bounds.minX,
-            y1 = bounds.minY,
-            x2 = bounds.maxX,
-            y2 = bounds.maxY;
 
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
-
-        for (var j = k1.x; j <= k2.x; ++j) {
-
-            var x = (j + 32767) << 16;
-
-            for (var i = k1.y; i <= k2.y; ++i) {
-
-
-                var key = x | (i + 32767);
-                if (this.DATA[key]) {
-                    if (!call(this.DATA[key])) return false
-                }
-
-            }
-        }
-        return true;
     }
-    checkChange(node, k1, k2) {
-        return node.hash.k1.x != k1.x || node.hash.k1.y != k1.y || node.hash.k2.x != k2.x || node.hash.k2.y != k2.y
+    checkChange(node, k1x, k1y, k2x, k2y) {
+        return node.hash.k1x != k1x || node.hash.k1y != k1y || node.hash.k2x != k2x || node.hash.k2y != k2y
     }
 
     update(node, bounds) {
@@ -141,94 +104,98 @@ module.exports = class Grid {
             x2 = bounds.maxX,
             y2 = bounds.maxY;
 
-        var k1 = this.getKey(x1, y1)
-        var k2 = this.getKey(x2, y2)
 
-        if (this.checkChange(node, k1, k2)) {
+        var k1x = x1 >> this.POWER,
+            k1y = y1 >> this.POWER,
+            k2x = x2 >> this.POWER,
+            k2y = y2 >> this.POWER;
+
+        if (this.checkChange(node, k1x, k1y, k2x, k2y)) {
             this.delete(node)
-            this.insert(node, bounds, k1, k2)
+            this.insert(node, bounds, k1x, k1y, k2x, k2y)
             return true;
         } else {
             return false;
         }
 
     }
-    insert(node, bounds, k1, k2) {
+    insert(node, bounds, k1x, k1y, k2x, k2y) {
 
         var x1 = bounds.minX,
             y1 = bounds.minY,
             x2 = bounds.maxX,
             y2 = bounds.maxY;
-
-        k1 = k1 || this.getKey(x1, y1)
-        k2 = k2 || this.getKey(x2, y2)
-        node.hash.k1 = k1
-        node.hash.k2 = k2
-
-        for (var j = k1.x; j <= k2.x; ++j) {
+        if (k1x === undefined) {
+            k1x = x1 >> this.POWER;
+            k1y = y1 >> this.POWER;
+            k2x = x2 >> this.POWER;
+            k2y = y2 >> this.POWER;
+        }
+        node.hash.k1x = k1x
+        node.hash.k1y = k1y;
+        node.hash.k2x = k2x
+        node.hash.k2y = k2y;
+        var width = (k2x - k1x + 1),
+            height = (k2y - k1y + 1)
+        for (var j = k1x; j <= k2x; ++j) {
             var x = (j + 32767) << 16;
-            for (var i = k1.y; i <= k2.y; ++i) {
+            var x2 = (j - k1x) * height;
+            for (var i = k1y; i <= k2y; ++i) {
                 var ke = x | (i + 32767);
                 // console.log(ke)
                 if (!this.DATA[ke]) this.sendCreateAt(j, i);
 
-                this.DATA[ke].set(node)
+                this.DATA[ke].set(node, x2 + i - k1y)
             }
         }
         return true;
     }
     delete(node) {
-        var k1 = node.hash.k1
-        var k2 = node.hash.k2
-        var lenX = k2.x,
-            lenY = k2.y;
-        for (var j = k1.x; j <= lenX; ++j) {
+        var k1x = node.hash.k1x
+        var k1y = node.hash.k1y;
+        var k2x = node.hash.k2x;
+        var k2y = node.hash.k2y
+        var width = (k2x - k1x + 1),
+            height = (k2y - k1y + 1);
+        for (var j = k1x; j <= k2x; ++j) {
             var x = (j + 32767) << 16;
-            for (var i = k1.y; i <= lenY; ++i) {
-
-
+            var x2 = (j - k1x) * height;
+            for (var i = k1y; i <= k2y; ++i) {
                 var ke = x | (i + 32767);
-
-                this.DATA[ke].delete(node)
+                this.DATA[ke].delete(node, x2 + i - k1y)
             }
-
         }
     }
-    toArray(bounds) {
-        var QID = this.getQueryID();
-        var array = [];
-        this._get(bounds, function (cell) {
-            cell.forEach(bounds, function (obj) {
-                if (obj._HashCheck == QID) return;
-                obj._HashCheck = QID
-                array.push(obj);
 
-            })
+    every(bounds, call, QID) {
+        if (bounds === null) {
+            for (var key in this.DATA) {
+                if (this.DATA[key]) {
+                    if (!this.DATA[key].everyAll(call, QID)) return false
+                }
+            }
             return true;
-        })
-        return array;
-    }
-    every(bounds, call) {
-        var QID = this.getQueryID();
-        return this._get(bounds, function (cell) {
-            return cell.every(bounds, function (obj, i) {
-                if (obj._HashCheck == QID) return true;
-                obj._HashCheck = QID
-                return call(obj);
+        }
+        var x1 = bounds.minX,
+            y1 = bounds.minY,
+            x2 = bounds.maxX,
+            y2 = bounds.maxY;
 
-            })
-        })
-    }
-    forEach(bounds, call) {
-        var QID = this.getQueryID();
-        this._get(bounds, function (cell) {
-            cell.forEach(bounds, function (obj, i) {
-                if (obj._HashCheck == QID) return;
-                obj._HashCheck = QID
-                call(obj);
+        var k1x = x1 >> this.POWER,
+            k1y = y1 >> this.POWER,
+            k2x = x2 >> this.POWER,
+            k2y = y2 >> this.POWER;
 
-            })
-            return true;
-        })
+        for (var j = k1x; j <= k2x; ++j) {
+            var x = (j + 32767) << 16;
+            for (var i = k1y; i <= k2y; ++i) {
+                var key = x | (i + 32767);
+                if (this.DATA[key]) {
+                    if (!this.DATA[key].every(bounds, call, QID)) return false
+                }
+            }
+        }
+        return true;
     }
+
 }
