@@ -142,8 +142,10 @@ module.exports = class Holder {
     delete(node, key) {
 
         var index = node.hash.indexes[key];
-        var swap = this.MAP[index] = this.MAP[this.MAP.length - 1];
-        swap.hash.indexes[(this.X - swap.hash.k1x) * (swap.hash.k2y - swap.hash.k1y + 1) + this.Y - swap.hash.k1y] = index;
+        if (index !== this.MAP.length - 1) {
+            var swap = this.MAP[index] = this.MAP[this.MAP.length - 1];
+            swap.hash.indexes[(this.X - swap.hash.k1x) * (swap.hash.k2y - swap.hash.k1y + 1) + this.Y - swap.hash.k1y] = index;
+        }
         this.MAP.pop();
         this.sub()
     }

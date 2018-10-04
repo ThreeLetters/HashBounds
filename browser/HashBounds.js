@@ -5,10 +5,10 @@
  License: AGPL-3.0 (https://github.com/ThreeLetters/HashBounds/blob/master/LICENSE)
  Source: https://github.com/ThreeLetters/HashBounds
  Build: v4.5.7
- Built on: 14/08/2018
+ Built on: 04/10/2018
 */
 
-// /Library/WebServer/Documents/HashBounds/Holder.js
+// /Users/andrew/Desktop/HashBounds/Holder.js
 class Holder {
     constructor(parent, x, y, power, lvl) {
         this.PARENT = parent;
@@ -137,8 +137,10 @@ class Holder {
     delete(node, key) {
 
         var index = node.hash.indexes[key];
-        var swap = this.MAP[index] = this.MAP[this.MAP.length - 1];
-        swap.hash.indexes[(this.X - swap.hash.k1x) * (swap.hash.k2y - swap.hash.k1y + 1) + this.Y - swap.hash.k1y] = index;
+        if (index !== this.MAP.length - 1) {
+            var swap = this.MAP[index] = this.MAP[this.MAP.length - 1];
+            swap.hash.indexes[(this.X - swap.hash.k1x) * (swap.hash.k2y - swap.hash.k1y + 1) + this.Y - swap.hash.k1y] = index;
+        }
         this.MAP.pop();
         this.sub()
     }
@@ -148,7 +150,7 @@ class Holder {
         this.add()
     }
 }
-// /Library/WebServer/Documents/HashBounds/Grid.js
+// /Users/andrew/Desktop/HashBounds/Grid.js
 class Grid {
     constructor(g, p, sizeX, sizeY, prev) {
         this.POWER = g;
@@ -330,7 +332,7 @@ class Grid {
     }
 
 }
-// /Library/WebServer/Documents/HashBounds/index.js
+// /Users/andrew/Desktop/HashBounds/index.js
 class HashBounds {
     constructor(power, lvl, maxX, maxY) {
         this.INITIAL = power;
