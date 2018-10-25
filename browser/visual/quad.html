@@ -305,6 +305,7 @@
                 //retrieve all objects in the bounds of the hero 
                 returnObjects = myTree.retrieve(myHero, (obj) => {
                     obj.check = 2;
+                    return true;
                 });
 
 
