@@ -183,25 +183,25 @@ module.exports = class HashBounds {
         this.convertBounds(bounds);
         return (bounds.maxX < this.MAXX && bounds.maxY < this.MAXY)
     }
-    truncateBounds(bounds) {
+    truncateBounds(bounds, minX, minY, maxX, maxY) {
         if (bounds.TYPE === 1) {
 
-            bounds.x = Math.min(bounds.x, this.MAXX);
-            bounds.y = Math.min(bounds.y, this.MAXX);
+            bounds.x = Math.min(bounds.x, minX);
+            bounds.y = Math.min(bounds.y, minY);
 
-            if (bounds.x + bounds.width > this.MAXX) {
-                bounds.width = this.MAXX - bounds.x;
+            if (bounds.x + bounds.width > maxX) {
+                bounds.width = maxX - bounds.x;
             }
-            if (bounds.y + bounds.height > this.MAXY) {
-                bounds.height = this.MAXY - bounds.y;
+            if (bounds.y + bounds.height > maxY) {
+                bounds.height = maxY - bounds.y;
             }
 
 
         } else if (bounds.TYPE === 2) {
-            bounds.minX = Math.min(bounds.minX, this.MAXX);
-            bounds.minY = Math.min(bounds.minY, this.MAXY);
-            bounds.maxX = Math.min(bounds.maxX, this.MAXX);
-            bounds.maxY = Math.min(bounds.maxY, this.MAXY);
+            bounds.minX = Math.max(bounds.minX, minX);
+            bounds.minY = Math.max(bounds.minY, minY);
+            bounds.maxX = Math.min(bounds.maxX, maxX);
+            bounds.maxY = Math.min(bounds.maxY, maxY);
         } else {
             throw "ERR: Bound not formatted! Please make sure bounds were put through the convertBounds function";
         }
